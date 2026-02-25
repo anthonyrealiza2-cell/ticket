@@ -64,12 +64,71 @@ require_once '../database.php';
             </div>
         </div>
 
-        <!-- Summary Cards -->
         <?php
         // Get date filters
         $dateFrom = isset($_GET['from']) ? $_GET['from'] : date('Y-m-d', strtotime('-30 days'));
         $dateTo = isset($_GET['to']) ? $_GET['to'] : date('Y-m-d');
         
+        // =============================================
+        // FETCH ALL CHART DATA
+        // =============================================
+        
+        // 1. Status Distribution Data
+        $statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Unresolved', 'Closed'];
+        $statusColors = ['#ff7675', '#74b9ff', '#fdcb6e', '#00b894', '#ff9f43', '#6c5ce7'];
+        $statusData = [];
+        
+        foreach($statuses as $status) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE status = ? AND DATE(date_requested) BETWEEN ? AND ?");
+            $stmt->execute([$status, $dateFrom, $dateTo]);
+            $statusData[] = $stmt->fetch()['count'];
+        }
+        
+        // 2. Priority Distribution Data
+        $priorities = ['Low', 'Medium', 'High'];
+        $priorityColors = ['#00b894', '#fdcb6e', '#ff7675'];
+        $priorityData = [];
+        
+        foreach($priorities as $priority) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE priority = ? AND DATE(date_requested) BETWEEN ? AND ?");
+            $stmt->execute([$priority, $dateFrom, $dateTo]);
+            $priorityData[] = $stmt->fetch()['count'];
+        }
+        
+        // 3. Daily Trends (Last 7 days)
+        $dailyLabels = [];
+        $dailyData = [];
+        for($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE DATE(date_requested) = ?");
+            $stmt->execute([$date]);
+            $dailyData[] = $stmt->fetch()['count'];
+            $dailyLabels[] = date('M d', strtotime($date));
+        }
+        
+        // 4. Technical Performance Data (Top 5)
+        $techNames = [];
+        $techResolved = [];
+        $techTotal = [];
+        $techPerformance = [];
+        
+        $stmt = $pdo->query("SELECT 
+                             CONCAT(firstname, ' ', lastname) as name,
+                             resolve,
+                             total_ticket,
+                             ROUND((resolve / NULLIF(total_ticket, 0)) * 100, 1) as performance
+                             FROM technical_staff 
+                             WHERE total_ticket > 0 
+                             ORDER BY performance DESC 
+                             LIMIT 5");
+        while($tech = $stmt->fetch()) {
+            $techNames[] = $tech['name'];
+            $techResolved[] = $tech['resolve'];
+            $techTotal[] = $tech['total_ticket'];
+            $techPerformance[] = $tech['performance'];
+        }
+        
+        // 5. Summary Statistics
         // Total tickets in period
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
@@ -81,14 +140,20 @@ require_once '../database.php';
         $resolvedTickets = $stmt->fetch()['total'];
         
         // Pending tickets
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Pending' AND DATE(date_requested) BETWEEN ? AND ?");
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status IN ('Pending', 'Assigned', 'In Progress') AND DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
         $pendingTickets = $stmt->fetch()['total'];
+        
+        // Unresolved tickets
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Unresolved' AND DATE(date_requested) BETWEEN ? AND ?");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $unresolvedTickets = $stmt->fetch()['total'];
         
         // Resolution rate
         $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100, 1) : 0;
         ?>
 
+        <!-- Summary Cards -->
         <div class="stats-grid" style="margin-bottom: 30px;">
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
@@ -115,6 +180,14 @@ require_once '../database.php';
             </div>
             
             <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-exclamation-circle" style="background: #ff9f43;"></i></div>
+                <div class="stat-info">
+                    <h3>Unresolved</h3>
+                    <div class="stat-number"><?php echo $unresolvedTickets; ?></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-percent" style="background: var(--info);"></i></div>
                 <div class="stat-info">
                     <h3>Resolution Rate</h3>
@@ -135,7 +208,7 @@ require_once '../database.php';
                 </div>
             </div>
 
-            <!-- Priority Distribution Chart (FIXED) -->
+            <!-- Priority Distribution Chart -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-chart-bar"></i> Priority Levels
@@ -151,7 +224,7 @@ require_once '../database.php';
             <!-- Daily Trends -->
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-chart-line"></i> Daily Ticket Trends
+                    <i class="fas fa-chart-line"></i> Daily Ticket Trends (Last 7 Days)
                 </div>
                 <div style="height: 300px; position: relative;">
                     <canvas id="trendsChart"></canvas>
@@ -161,7 +234,7 @@ require_once '../database.php';
             <!-- Technical Performance -->
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-trophy"></i> Top Technical Staff
+                    <i class="fas fa-trophy"></i> Top Technical Staff Performance
                 </div>
                 <div style="height: 300px; position: relative;">
                     <canvas id="techChart"></canvas>
@@ -169,308 +242,288 @@ require_once '../database.php';
             </div>
         </div>
 
-        <!-- Additional Stats -->
+        <!-- Detailed Statistics Table -->
         <div class="card">
             <div class="card-header">
                 <i class="fas fa-chart-simple"></i> Detailed Statistics
             </div>
             
-            <?php
-            // Get priority breakdown (FIXED)
-            $priorityStats = [];
-            $priorities = ['Low', 'Medium', 'High'];
-            foreach($priorities as $priority) {
-                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE priority = ? AND DATE(date_requested) BETWEEN ? AND ?");
-                $stmt->execute([$priority, $dateFrom, $dateTo]);
-                $priorityStats[$priority] = $stmt->fetch()['count'];
-            }
-            
-            // Get daily trends for last 7 days
-            $dailyTrends = [];
-            $dailyLabels = [];
-            for($i = 6; $i >= 0; $i--) {
-                $date = date('Y-m-d', strtotime("-$i days"));
-                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE DATE(date_requested) = ?");
-                $stmt->execute([$date]);
-                $dailyTrends[] = $stmt->fetch()['count'];
-                $dailyLabels[] = date('M d', strtotime($date));
-            }
-            
-            // Get technical performance
-            $techData = [];
-            $techLabels = [];
-            $stmt = $pdo->prepare("
-                SELECT CONCAT(firstname, ' ', lastname) as name, 
-                       SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) as resolved,
-                       COUNT(t.ticket_id) as total
-                FROM technical_staff ts
-                LEFT JOIN tickets t ON ts.technical_id = t.technical_id 
-                    AND DATE(t.date_requested) BETWEEN ? AND ?
-                GROUP BY ts.technical_id
-                HAVING total > 0
-                ORDER BY resolved DESC
-                LIMIT 5
-            ");
-            $stmt->execute([$dateFrom, $dateTo]);
-            while($row = $stmt->fetch()) {
-                $techLabels[] = $row['name'];
-                $techData[] = $row['total'] > 0 ? round(($row['resolved'] / $row['total']) * 100, 1) : 0;
-            }
-            ?>
-
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Metric</th>
-                            <th>Value</th>
+                            <th>Count</th>
                             <th>Percentage</th>
+                            <th>Visual</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Low Priority Tickets</td>
-                            <td><?php echo $priorityStats['Low']; ?></td>
-                            <td>
-                                <div class="progress-bar" style="width: 200px;">
-                                    <div class="progress" style="width: <?php echo $totalTickets > 0 ? ($priorityStats['Low'] / $totalTickets * 100) : 0; ?>%; background: var(--success);">
-                                        <?php echo $totalTickets > 0 ? round(($priorityStats['Low'] / $totalTickets * 100), 1) : 0; ?>%
+                        <?php
+                        // Status breakdown
+                        foreach($statuses as $index => $status) {
+                            $count = $statusData[$index];
+                            $percentage = $totalTickets > 0 ? round(($count / $totalTickets) * 100, 1) : 0;
+                            $color = $statusColors[$index];
+                            echo "<tr>";
+                            echo "<td><strong>{$status}</strong></td>";
+                            echo "<td>{$count}</td>";
+                            echo "<td>{$percentage}%</td>";
+                            echo "<td>
+                                    <div class='progress-bar' style='width: 200px;'>
+                                        <div class='progress' style='width: {$percentage}%; background: {$color};'>{$percentage}%</div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Medium Priority Tickets</td>
-                            <td><?php echo $priorityStats['Medium']; ?></td>
-                            <td>
-                                <div class="progress-bar" style="width: 200px;">
-                                    <div class="progress" style="width: <?php echo $totalTickets > 0 ? ($priorityStats['Medium'] / $totalTickets * 100) : 0; ?>%; background: var(--warning);">
-                                        <?php echo $totalTickets > 0 ? round(($priorityStats['Medium'] / $totalTickets * 100), 1) : 0; ?>%
+                                  </td>";
+                            echo "</tr>";
+                        }
+                        
+                        // Priority breakdown
+                        foreach($priorities as $index => $priority) {
+                            $count = $priorityData[$index];
+                            $percentage = $totalTickets > 0 ? round(($count / $totalTickets) * 100, 1) : 0;
+                            $color = $priorityColors[$index];
+                            echo "<tr>";
+                            echo "<td><strong>{$priority} Priority</strong></td>";
+                            echo "<td>{$count}</td>";
+                            echo "<td>{$percentage}%</td>";
+                            echo "<td>
+                                    <div class='progress-bar' style='width: 200px;'>
+                                        <div class='progress' style='width: {$percentage}%; background: {$color};'>{$percentage}%</div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>High Priority Tickets</td>
-                            <td><?php echo $priorityStats['High']; ?></td>
-                            <td>
-                                <div class="progress-bar" style="width: 200px;">
-                                    <div class="progress" style="width: <?php echo $totalTickets > 0 ? ($priorityStats['High'] / $totalTickets * 100) : 0; ?>%; background: var(--danger);">
-                                        <?php echo $totalTickets > 0 ? round(($priorityStats['High'] / $totalTickets * 100), 1) : 0; ?>%
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                                  </td>";
+                            echo "</tr>";
+                        }
+                        ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script src="../script.js"></script>
     <script>
-    // Chart initialization
+    // Wait for DOM to load completely
     document.addEventListener('DOMContentLoaded', function() {
-        // Status Chart Data
-$statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Unresolved', 'Closed'];
-$statusColors = ['#ff7675', '#74b9ff', '#fdcb6e', '#00b894', '#ff9f43', '#6c5ce7'];
-
-foreach($statuses as $status) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE status = ? AND DATE(date_requested) BETWEEN ? AND ?");
-    $stmt->execute([$status, $dateFrom, $dateTo]);
-    $statusStats[] = $stmt->fetch()['count'];
-}
-        ?>
-
-        // Status Chart
-        new Chart(document.getElementById('statusChart'), {
-            type: 'doughnut',
-            data: {
-                labels: <?php echo json_encode($statuses); ?>,
-                datasets: [{
-                    data: <?php echo json_encode($statusStats); ?>,
-                    backgroundColor: <?php echo json_encode($statusColors); ?>,
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#fff',
-                            font: { size: 12 }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                let value = context.raw || 0;
-                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${label}: ${value} (${percentage}%)`;
+        console.log('DOM loaded, initializing charts...');
+        
+        // =============================================
+        // 1. Status Chart (Pie Chart)
+        // =============================================
+        const statusCtx = document.getElementById('statusChart');
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: <?php echo json_encode($statuses); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode($statusData); ?>,
+                        backgroundColor: <?php echo json_encode($statusColors); ?>,
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#fff',
+                                font: { size: 12 }
                             }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Priority Chart (FIXED - Now using proper data)
-        new Chart(document.getElementById('priorityChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Low', 'Medium', 'High'],
-                datasets: [{
-                    label: 'Number of Tickets',
-                    data: [
-                        <?php echo $priorityStats['Low']; ?>,
-                        <?php echo $priorityStats['Medium']; ?>,
-                        <?php echo $priorityStats['High']; ?>
-                    ],
-                    backgroundColor: ['#00b894', '#fdcb6e', '#ff7675'],
-                    borderRadius: 8,
-                    barPercentage: 0.6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#2f3542' },
-                        ticks: { 
-                            color: '#fff',
-                            stepSize: 1,
-                            callback: function(value) {
-                                if (Math.floor(value) === value) {
-                                    return value;
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw || 0;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
                                 }
                             }
                         }
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#fff' }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let value = context.raw || 0;
-                                let total = <?php echo $totalTickets; ?>;
-                                let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${value} tickets (${percentage}%)`;
-                            }
-                        }
                     }
                 }
-            }
-        });
+            });
+            console.log('Status chart created');
+        }
 
-        // Trends Chart
-        new Chart(document.getElementById('trendsChart'), {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($dailyLabels); ?>,
-                datasets: [{
-                    label: 'Tickets Created',
-                    data: <?php echo json_encode($dailyTrends); ?>,
-                    borderColor: '#6c5ce7',
-                    backgroundColor: 'rgba(108, 92, 231, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#6c5ce7',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#2f3542' },
-                        ticks: { 
-                            color: '#fff',
-                            stepSize: 1,
-                            callback: function(value) {
-                                if (Math.floor(value) === value) {
-                                    return value;
+        // =============================================
+        // 2. Priority Chart (Bar Chart)
+        // =============================================
+        const priorityCtx = document.getElementById('priorityChart');
+        if (priorityCtx) {
+            new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($priorities); ?>,
+                    datasets: [{
+                        label: 'Number of Tickets',
+                        data: <?php echo json_encode($priorityData); ?>,
+                        backgroundColor: <?php echo json_encode($priorityColors); ?>,
+                        borderRadius: 8,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#2f3542' },
+                            ticks: { 
+                                color: '#fff',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    if (Math.floor(value) === value) {
+                                        return value;
+                                    }
+                                }
+                            }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#fff' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.raw || 0;
+                                    let total = <?php echo $totalTickets; ?>;
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${value} tickets (${percentage}%)`;
                                 }
                             }
                         }
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#fff' }
-                    }
-                },
-                plugins: {
-                    legend: { 
-                        labels: { color: '#fff' }
                     }
                 }
-            }
-        });
+            });
+            console.log('Priority chart created');
+        }
 
-        // Technical Performance Chart
-        new Chart(document.getElementById('techChart'), {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode($techLabels); ?>,
-                datasets: [{
-                    label: 'Performance %',
-                    data: <?php echo json_encode($techData); ?>,
-                    backgroundColor: '#00b894',
-                    borderRadius: 8,
-                    barPercentage: 0.6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { color: '#2f3542' },
-                        ticks: { 
-                            color: '#fff',
-                            callback: function(value) {
-                                return value + '%';
+        // =============================================
+        // 3. Trends Chart (Line Chart)
+        // =============================================
+        const trendsCtx = document.getElementById('trendsChart');
+        if (trendsCtx) {
+            new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: <?php echo json_encode($dailyLabels); ?>,
+                    datasets: [{
+                        label: 'Tickets Created',
+                        data: <?php echo json_encode($dailyData); ?>,
+                        borderColor: '#6c5ce7',
+                        backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#6c5ce7',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#2f3542' },
+                            ticks: { 
+                                color: '#fff',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    if (Math.floor(value) === value) {
+                                        return value;
+                                    }
+                                }
                             }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#fff' }
                         }
                     },
-                    y: { 
-                        grid: { display: false },
-                        ticks: { color: '#fff' }
+                    plugins: {
+                        legend: { 
+                            labels: { color: '#fff' }
+                        }
                     }
+                }
+            });
+            console.log('Trends chart created');
+        }
+
+        // =============================================
+        // 4. Technical Performance Chart (Bar Chart)
+        // =============================================
+        const techCtx = document.getElementById('techChart');
+        if (techCtx) {
+            new Chart(techCtx, {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($techNames); ?>,
+                    datasets: [{
+                        label: 'Performance %',
+                        data: <?php echo json_encode($techPerformance); ?>,
+                        backgroundColor: '#00b894',
+                        borderRadius: 8,
+                        barPercentage: 0.6
+                    }]
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Performance: ${context.raw}%`;
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#2f3542' },
+                            ticks: { 
+                                color: '#fff',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        y: { 
+                            grid: { display: false },
+                            ticks: { color: '#fff' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.raw || 0;
+                                    let index = context.dataIndex;
+                                    return [
+                                        `Performance: ${value}%`,
+                                        `Resolved: ${<?php echo json_encode($techResolved); ?>[index]}`,
+                                        `Total: ${<?php echo json_encode($techTotal); ?>[index]}`
+                                    ];
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+            console.log('Technical chart created');
+        }
     });
 
+    // =============================================
+    // HELPER FUNCTIONS
+    // =============================================
+    
     function applyDateFilter() {
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
@@ -483,7 +536,6 @@ foreach($statuses as $status) {
 
     function exportReport(format) {
         if(format === 'pdf') {
-            // For PDF, we'll use print
             window.print();
         } else {
             // Export to CSV
@@ -493,15 +545,29 @@ foreach($statuses as $status) {
                 ['Total Tickets', '<?php echo $totalTickets; ?>'],
                 ['Resolved Tickets', '<?php echo $resolvedTickets; ?>'],
                 ['Pending Tickets', '<?php echo $pendingTickets; ?>'],
+                ['Unresolved Tickets', '<?php echo $unresolvedTickets; ?>'],
                 ['Resolution Rate', '<?php echo $resolutionRate; ?>%'],
                 [],
+                ['Status Breakdown', 'Count'],
+                <?php
+                foreach($statuses as $index => $status) {
+                    echo "['{$status}', '{$statusData[$index]}'],";
+                }
+                ?>
+                [],
                 ['Priority Breakdown', 'Count'],
-                ['Low Priority', '<?php echo $priorityStats['Low']; ?>'],
-                ['Medium Priority', '<?php echo $priorityStats['Medium']; ?>'],
-                ['High Priority', '<?php echo $priorityStats['High']; ?>']
+                <?php
+                foreach($priorities as $index => $priority) {
+                    echo "['{$priority}', '{$priorityData[$index]}'],";
+                }
+                ?>
             ];
             
-            let csv = data.map(row => row.join(',')).join('\n');
+            let csv = '';
+            data.forEach(row => {
+                csv += row.join(',') + '\n';
+            });
+            
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -534,7 +600,7 @@ foreach($statuses as $status) {
     <style>
     /* Print styles for PDF export */
     @media print {
-        .navbar, .btn, .modal, .search-box {
+        .navbar, .btn, .modal {
             display: none !important;
         }
         
@@ -547,10 +613,15 @@ foreach($statuses as $status) {
             border: 1px solid #ddd;
             box-shadow: none;
             break-inside: avoid;
+            background: white;
         }
         
         canvas {
             max-height: 250px;
+        }
+        
+        * {
+            color: black !important;
         }
     }
     </style>
