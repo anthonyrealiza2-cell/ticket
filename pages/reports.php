@@ -272,16 +272,14 @@ require_once '../database.php';
     // Chart initialization
     document.addEventListener('DOMContentLoaded', function() {
         // Status Chart Data
-        <?php
-        $statusStats = [];
-        $statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Closed'];
-        $statusColors = ['#ff7675', '#74b9ff', '#fdcb6e', '#00b894', '#6c5ce7'];
-        
-        foreach($statuses as $status) {
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE status = ? AND DATE(date_requested) BETWEEN ? AND ?");
-            $stmt->execute([$status, $dateFrom, $dateTo]);
-            $statusStats[] = $stmt->fetch()['count'];
-        }
+$statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Unresolved', 'Closed'];
+$statusColors = ['#ff7675', '#74b9ff', '#fdcb6e', '#00b894', '#ff9f43', '#6c5ce7'];
+
+foreach($statuses as $status) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE status = ? AND DATE(date_requested) BETWEEN ? AND ?");
+    $stmt->execute([$status, $dateFrom, $dateTo]);
+    $statusStats[] = $stmt->fetch()['count'];
+}
         ?>
 
         // Status Chart

@@ -58,13 +58,16 @@ if(isset($_GET['tech_id'])) {
             </div>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="flex" style="margin-bottom: 20px; gap: 10px;">
-            <button class="btn btn-sm" onclick="filterTickets('all')" style="background: var(--accent-primary);">All</button>
-            <button class="btn btn-sm" onclick="filterTickets('pending')" style="background: var(--danger);">Pending</button>
-            <button class="btn btn-sm" onclick="filterTickets('assigned')" style="background: var(--info);">Assigned</button>
-            <button class="btn btn-sm" onclick="filterTickets('resolved')" style="background: var(--success);">Resolved</button>
-        </div>
+        <!-- Filter Tabs (UPDATED with Unresolved) -->
+<div class="flex" style="margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+    <button class="btn btn-sm" onclick="filterTickets('all')" style="background: var(--accent-primary);">All</button>
+    <button class="btn btn-sm" onclick="filterTickets('Pending')" style="background: var(--danger);">Pending</button>
+    <button class="btn btn-sm" onclick="filterTickets('Assigned')" style="background: var(--info);">Assigned</button>
+    <button class="btn btn-sm" onclick="filterTickets('In Progress')" style="background: var(--warning);">In Progress</button>
+    <button class="btn btn-sm" onclick="filterTickets('Resolved')" style="background: var(--success);">Resolved</button>
+    <button class="btn btn-sm" onclick="filterTickets('Unresolved')" style="background: #ff9f43;">Unresolved</button>
+    <button class="btn btn-sm" onclick="filterTickets('Closed')" style="background: var(--text-muted);">Closed</button>
+</div>
 
         <!-- Tickets Table -->
         <div class="card">
@@ -92,8 +95,7 @@ if(isset($_GET['tech_id'])) {
                                              ORDER BY t.created_at DESC");
                         while($ticket = $stmt->fetch()) {
                             $priorityClass = strtolower($ticket['priority'] ?? 'medium');
-                            $statusClass = strtolower($ticket['status'] ?? 'pending');
-                            echo "<tr data-status='{$ticket['status']}'>";
+                            $statusClass = strtolower(str_replace(' ', '', $ticket['status'] ?? 'pending'));                            echo "<tr data-status='{$ticket['status']}'>";
                             echo "<td>#{$ticket['ticket_id']}</td>";
                             echo "<td>{$ticket['company_name']}</td>";
                             echo "<td>{$ticket['contact_person']}</td>";
@@ -164,7 +166,7 @@ if(isset($_GET['tech_id'])) {
         </div>
     </div>
 
-    <!-- Update Status Modal (UPDATED OPTIONS) -->
+    <!-- Update Status Modal (UPDATED with Unresolved) -->
 <div class="modal" id="statusModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -177,7 +179,11 @@ if(isset($_GET['tech_id'])) {
                 <label class="form-label">Status</label>
                 <select class="form-control" id="ticketStatus" required>
                     <option value="Pending">Pending</option>
+                    <option value="Assigned">Assigned</option>
+                    <option value="In Progress">In Progress</option>
                     <option value="Resolved">Resolved</option>
+                    <option value="Unresolved">Unresolved</option>
+                    <option value="Closed">Closed</option>
                 </select>
             </div>
             <div class="form-group">

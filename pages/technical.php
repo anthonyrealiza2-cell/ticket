@@ -109,52 +109,55 @@ require_once '../database.php';
                             <th>Total Tickets</th>
                             <th>Resolved</th>
                             <th>Pending</th>
+                            <th>Unresolved</th>
                             <th>Performance</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $stmt = $pdo->query("SELECT *, 
-                                             (resolve / NULLIF(total_ticket, 0) * 100) as performance,
-                                             (total_ticket - resolve) as pending
-                                             FROM technical_staff 
-                                             ORDER BY performance DESC");
-                        while($tech = $stmt->fetch()) {
-                            $performance = round($tech['performance'] ?? 0, 1);
-                            $perfClass = $performance >= 80 ? 'success' : ($performance >= 50 ? 'warning' : 'danger');
-                            $pending = $tech['total_ticket'] - $tech['resolve'];
-                            
-                            echo "<tr>";
-                            echo "<td>#{$tech['technical_id']}</td>";
-                            echo "<td><strong>{$tech['firstname']} {$tech['lastname']}</strong></td>";
-                            echo "<td>{$tech['email']}</td>";
-                            echo "<td>{$tech['contact_viber']}</td>";
-                            echo "<td>{$tech['branch']}</td>";
-                            echo "<td>{$tech['position']}</td>";
-                            echo "<td><span class='badge badge-info'>{$tech['total_ticket']}</span></td>";
-                            echo "<td><span class='badge badge-success'>{$tech['resolve']}</span></td>";
-                            echo "<td><span class='badge badge-warning'>{$pending}</span></td>";
-                            echo "<td>
-                                    <div class='progress-bar' style='width: 100px;'>
-                                        <div class='progress' style='width: {$performance}%; background: var(--{$perfClass});'>{$performance}%</div>
-                                    </div>
-                                  </td>";
-                            echo "<td>
-                                    <button class='btn btn-primary btn-sm' onclick='viewTech({$tech['technical_id']})' title='View Details'>
-                                        <i class='fas fa-eye'></i>
-                                    </button>
-                                    <button class='btn btn-success btn-sm' onclick='editTech({$tech['technical_id']})' title='Edit'>
-                                        <i class='fas fa-edit'></i>
-                                    </button>
-                                    <button class='btn btn-info btn-sm' onclick='viewTechTickets({$tech['technical_id']})' title='View Tickets'>
-                                        <i class='fas fa-ticket-alt'></i>
-                                    </button>
-                                  </td>";
-                            echo "</tr>";
-                        }
-                        ?>
-                    </tbody>
+    <?php
+    // UPDATED QUERY to include unresolve
+    $stmt = $pdo->query("SELECT *, 
+                         (resolve / NULLIF(total_ticket, 0) * 100) as performance,
+                         (total_ticket - resolve - unresolve) as pending
+                         FROM technical_staff 
+                         ORDER BY performance DESC");
+    while($tech = $stmt->fetch()) {
+        $performance = round($tech['performance'] ?? 0, 1);
+        $perfClass = $performance >= 80 ? 'success' : ($performance >= 50 ? 'warning' : 'danger');
+        $pending = $tech['total_ticket'] - $tech['resolve'] - $tech['unresolve']; // FIXED: subtract unresolved too
+        
+        echo "<tr>";
+        echo "<td>#{$tech['technical_id']}</td>";
+        echo "<td><strong>{$tech['firstname']} {$tech['lastname']}</strong></td>";
+        echo "<td>{$tech['email']}</td>";
+        echo "<td>{$tech['contact_viber']}</td>";
+        echo "<td>{$tech['branch']}</td>";
+        echo "<td>{$tech['position']}</td>";
+        echo "<td><span class='badge badge-info'>{$tech['total_ticket']}</span></td>";
+        echo "<td><span class='badge badge-success'>{$tech['resolve']}</span></td>";
+        echo "<td><span class='badge badge-warning'>{$pending}</span></td>";
+        echo "<td><span class='badge badge-unresolved'>{$tech['unresolve']}</span></td>"; // NEW: Unresolved column
+        echo "<td>
+                <div class='progress-bar' style='width: 100px;'>
+                    <div class='progress' style='width: {$performance}%; background: var(--{$perfClass});'>{$performance}%</div>
+                </div>
+              </td>";
+        echo "<td>
+                <button class='btn btn-primary btn-sm' onclick='viewTech({$tech['technical_id']})' title='View Details'>
+                    <i class='fas fa-eye'></i>
+                </button>
+                <button class='btn btn-success btn-sm' onclick='editTech({$tech['technical_id']})' title='Edit'>
+                    <i class='fas fa-edit'></i>
+                </button>
+                <button class='btn btn-info btn-sm' onclick='viewTechTickets({$tech['technical_id']})' title='View Tickets'>
+                    <i class='fas fa-ticket-alt'></i>
+                </button>
+              </td>";
+        echo "</tr>";
+    }
+    ?>
+</tbody>
                 </table>
             </div>
         </div>
