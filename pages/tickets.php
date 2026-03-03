@@ -357,7 +357,7 @@ if (isset($_GET['client_id'])) {
                         <?php
                         $stmt = $pdo->query("
                             SELECT t.ticket_id, t.priority, t.status, t.date_requested, t.concern_description,
-                                   c.company_name, c.contact_person,
+                                   c.company_name, c.contact_person, c.client_id,
                                    CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
                                    t.technical_id
                             FROM tickets t 
@@ -374,6 +374,7 @@ if (isset($_GET['client_id'])) {
                         ?>
                             <tr data-status="<?= $ticket['status'] ?>" 
                                 data-ticket-id="<?= $ticket['ticket_id'] ?>"
+                                data-company-id="<?= $ticket['client_id'] ?>"
                                 data-is-unassigned="<?= $isUnassigned ? 'true' : 'false' ?>">
                                 <td>#<?= $ticket['ticket_id'] ?></td>
                                 <td><?= htmlspecialchars($ticket['company_name']) ?></td>
@@ -448,15 +449,15 @@ if (isset($_GET['client_id'])) {
             
             <form id="editTicketForm" class="edit-ticket-form" onsubmit="submitEditTicket(event)">
                 <input type="hidden" id="editTicketId">
+                <input type="hidden" id="editOriginalCompanyId">
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">
                             <i class="fas fa-building"></i> Company Name
                         </label>
-                        <input type="text" class="form-control" id="editCompanyName" readonly 
-                               style="background: var(--bg-card); opacity: 0.8;">
-                        <small style="color: var(--text-muted);">Company cannot be changed</small>
+                        <input type="text" class="form-control" id="editCompanyName" required>
+                        <small style="color: var(--text-muted);">Enter company name (will be created if not exists)</small>
                     </div>
                     
                     <div class="form-group">
@@ -763,9 +764,14 @@ if (isset($_GET['client_id'])) {
                         return;
                     }
                     
+                    // Get the row to access company_id
+                    const row = document.querySelector(`tr[data-ticket-id="${id}"]`);
+                    const companyId = row.getAttribute('data-company-id');
+                    
                     // Populate form fields
                     document.getElementById('editTicketId').value = data.ticket_id;
                     document.getElementById('editTicketIdDisplay').textContent = data.ticket_id;
+                    document.getElementById('editOriginalCompanyId').value = companyId;
                     document.getElementById('editCompanyName').value = data.company_name || '';
                     document.getElementById('editContactPerson').value = data.contact_person || '';
                     document.getElementById('editContactNumber').value = data.contact_number || '';
@@ -822,6 +828,8 @@ if (isset($_GET['client_id'])) {
             
             const formData = {
                 ticket_id: document.getElementById('editTicketId').value,
+                original_company_id: document.getElementById('editOriginalCompanyId').value,
+                company_name: document.getElementById('editCompanyName').value,
                 contact_person: document.getElementById('editContactPerson').value,
                 contact_number: document.getElementById('editContactNumber').value,
                 email: document.getElementById('editEmail').value,
