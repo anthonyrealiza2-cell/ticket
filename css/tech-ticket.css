@@ -125,125 +125,6 @@
   border-color: var(--accent-primary);
 }
 
-/* Actions Menu Styles */
-.actions-menu-container {
-  position: relative;
-  display: inline-block;
-}
-
-.actions-menu-btn {
-  background: var(--bg-hover);
-  border: none;
-  color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.actions-menu-btn:hover {
-  background: var(--accent-primary);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-}
-
-.actions-menu-btn i {
-  font-size: 1.2rem;
-}
-
-.actions-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 8px 0;
-  min-width: 180px;
-  box-shadow: var(--shadow-lg);
-  z-index: 9999;
-  display: none;
-  animation: slideDown 0.2s ease;
-}
-
-.actions-dropdown.show {
-  display: block;
-}
-
-.actions-dropdown.show.upward {
-  top: auto;
-  bottom: 100%;
-  animation: slideUp 0.2s ease;
-}
-
-.actions-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 0.95rem;
-}
-
-.actions-dropdown-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.actions-dropdown-item i {
-  width: 18px;
-  font-size: 1rem;
-}
-
-.actions-dropdown-item.view i {
-  color: var(--info);
-}
-.actions-dropdown-item.edit i {
-  color: var(--warning);
-}
-.actions-dropdown-item.delete i {
-  color: var(--danger);
-}
-
-.actions-dropdown-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 8px 0;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Fixed Table Container */
 .table-container {
   overflow-x: auto;
@@ -260,69 +141,14 @@ table {
   min-width: 1200px;
 }
 
-/* Ensure the last column (actions) has enough space */
-td:last-child {
-  position: relative;
-  padding-right: 20px !important;
-}
-
-/* Fix for actions cell to prevent dropdown cutoff */
+/* Actions cell styling */
 td.actions-cell {
-  overflow: visible !important;
-  position: relative;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
-/* Ensure the dropdown doesn't get clipped */
-.actions-menu-container {
-  overflow: visible !important;
-}
-
-/* Delete Modal */
-.delete-warning {
-  text-align: center;
-  padding: 20px;
-}
-
-.delete-warning i {
-  font-size: 4rem;
-  color: var(--danger);
-  margin-bottom: 15px;
-}
-
-.delete-warning h3 {
-  color: var(--text-primary);
-  margin-bottom: 10px;
-}
-
-.delete-warning p {
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
-
-.delete-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-.btn-delete {
-  background: var(--gradient-3);
-  color: white;
-}
-
-.btn-delete:hover {
-  box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
-}
-
-.btn-cancel {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.btn-cancel:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent-primary);
+td.actions-cell .btn-sm {
+  margin: 0 2px;
 }
 
 /* Ticket details in modal */

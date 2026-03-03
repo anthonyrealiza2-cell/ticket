@@ -183,6 +183,110 @@ if (isset($_GET['client_id'])) {
             background: var(--bg-hover);
             border-color: var(--accent-primary);
         }
+
+        /* Edit Ticket Modal Styles */
+        .edit-ticket-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .edit-ticket-form .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .edit-ticket-form .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        
+        .edit-ticket-form .form-label i {
+            color: var(--accent-primary);
+            margin-right: 8px;
+            width: 18px;
+        }
+        
+        .edit-ticket-form .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: "Inter", sans-serif;
+        }
+        
+        .edit-ticket-form .form-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-glow);
+            background: var(--bg-hover);
+        }
+        
+        .edit-ticket-form .form-control::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .edit-ticket-form select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c7293' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 45px;
+        }
+        
+        .edit-ticket-form textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .current-info {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--info);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .current-info i {
+            color: var(--info);
+            font-size: 1.2rem;
+        }
+        
+        .current-info span {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .current-info strong {
+            color: var(--accent-primary);
+        }
+        
+        @media (max-width: 768px) {
+            .edit-ticket-form .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Active filter tab */
+        .filter-tab.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
     </style>
 </head>
 <body>
@@ -220,13 +324,14 @@ if (isset($_GET['client_id'])) {
             </div>
         </div>
 
-        <!-- Filter Tabs -->
+        <!-- Filter Tabs - Added Unassigned -->
         <div class="flex" style="margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
             <?php
-            $filters = ['all', 'pending', 'assigned', 'in progress', 'resolved'];
-            $filterLabels = ['All', 'Pending', 'Assigned', 'In Progress', 'Resolved'];
+            $filters = ['all', 'pending', 'assigned', 'in progress', 'resolved', 'unassigned'];
+            $filterLabels = ['All', 'Pending', 'Assigned', 'In Progress', 'Resolved', 'Unassigned'];
             foreach ($filters as $index => $filter) {
-                echo "<button class='filter-tab' onclick='filterTickets(\"$filter\")'>{$filterLabels[$index]}</button>";
+                $activeClass = (isset($_GET['filter']) && $_GET['filter'] === $filter) || (!isset($_GET['filter']) && $filter === 'all') ? 'active' : '';
+                echo "<button class='filter-tab $activeClass' onclick='filterTickets(\"$filter\")'>{$filterLabels[$index]}</button>";
             }
             ?>
         </div>
@@ -253,7 +358,8 @@ if (isset($_GET['client_id'])) {
                         $stmt = $pdo->query("
                             SELECT t.ticket_id, t.priority, t.status, t.date_requested, t.concern_description,
                                    c.company_name, c.contact_person,
-                                   CONCAT(ts.firstname, ' ', ts.lastname) as tech_name 
+                                   CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
+                                   t.technical_id
                             FROM tickets t 
                             LEFT JOIN technical_staff ts ON t.technical_id = ts.technical_id 
                             LEFT JOIN clients c ON t.company_id = c.client_id
@@ -264,8 +370,11 @@ if (isset($_GET['client_id'])) {
                             $priorityClass = strtolower($ticket['priority'] ?? 'medium');
                             $statusClass = strtolower(str_replace(' ', '', $ticket['status'] ?? 'pending'));
                             $isResolved = in_array($ticket['status'], ['Resolved', 'Closed']);
+                            $isUnassigned = is_null($ticket['technical_id']);
                         ?>
-                            <tr data-status="<?= $ticket['status'] ?>" data-ticket-id="<?= $ticket['ticket_id'] ?>">
+                            <tr data-status="<?= $ticket['status'] ?>" 
+                                data-ticket-id="<?= $ticket['ticket_id'] ?>"
+                                data-is-unassigned="<?= $isUnassigned ? 'true' : 'false' ?>">
                                 <td>#<?= $ticket['ticket_id'] ?></td>
                                 <td><?= htmlspecialchars($ticket['company_name']) ?></td>
                                 <td><?= htmlspecialchars($ticket['contact_person']) ?></td>
@@ -288,8 +397,11 @@ if (isset($_GET['client_id'])) {
                                                 <i class='fas fa-user-plus'></i> Assign Technical
                                             </button>
                                             <?php endif; ?>
+                                            <button class='actions-dropdown-item edit' onclick='editTicket(<?= $ticket["ticket_id"] ?>)'>
+                                                <i class='fas fa-edit'></i> Edit Ticket
+                                            </button>
                                             <button class='actions-dropdown-item edit' onclick='updateStatus(<?= $ticket["ticket_id"] ?>)'>
-                                                <i class='fas fa-edit'></i> Update Status
+                                                <i class='fas fa-sync-alt'></i> Update Status
                                             </button>
                                             <div class='actions-dropdown-divider'></div>
                                             <button class='actions-dropdown-item delete' onclick='confirmDelete(<?= $ticket["ticket_id"] ?>)'>
@@ -315,6 +427,134 @@ if (isset($_GET['client_id'])) {
                 <button class="modal-close" onclick="closeModal('viewTicketModal')">&times;</button>
             </div>
             <div id="ticketDetails"></div>
+            <div class="flex justify-end" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="closeModal('viewTicketModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Ticket Modal -->
+    <div class="modal" id="editTicketModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit" style="color: var(--warning);"></i> Edit Ticket</h2>
+                <button class="modal-close" onclick="closeModal('editTicketModal')">&times;</button>
+            </div>
+            
+            <div class="current-info" id="editTicketInfo">
+                <i class="fas fa-info-circle"></i>
+                <span>Editing Ticket #<span id="editTicketIdDisplay"></span></span>
+            </div>
+            
+            <form id="editTicketForm" class="edit-ticket-form" onsubmit="submitEditTicket(event)">
+                <input type="hidden" id="editTicketId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-building"></i> Company Name
+                        </label>
+                        <input type="text" class="form-control" id="editCompanyName" readonly 
+                               style="background: var(--bg-card); opacity: 0.8;">
+                        <small style="color: var(--text-muted);">Company cannot be changed</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Contact Person
+                        </label>
+                        <input type="text" class="form-control" id="editContactPerson" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-phone"></i> Contact Number
+                        </label>
+                        <input type="tel" class="form-control" id="editContactNumber" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" class="form-control" id="editEmail" placeholder="company@email.com">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-box"></i> Product
+                        </label>
+                        <select class="form-control" id="editProduct" required>
+                            <option value="">Select Product</option>
+                            <?php
+                            $products = $pdo->query("SELECT * FROM products ORDER BY product_name");
+                            while ($product = $products->fetch()):
+                            ?>
+                                <option value="<?= htmlspecialchars($product['product_name'] . ' v' . $product['version']) ?>">
+                                    <?= htmlspecialchars($product['product_name'] . ' v' . $product['version']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-exclamation-triangle"></i> Concern Type
+                        </label>
+                        <select class="form-control" id="editConcern" required>
+                            <option value="">Select Concern</option>
+                            <?php
+                            $concerns = $pdo->query("SELECT * FROM concerns ORDER BY concern_name");
+                            while ($concern = $concerns->fetch()):
+                            ?>
+                                <option value="<?= htmlspecialchars($concern['concern_name']) ?>">
+                                    <?= htmlspecialchars($concern['concern_name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i> Detailed Description
+                    </label>
+                    <textarea class="form-control" id="editDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-flag"></i> Priority Level
+                        </label>
+                        <select class="form-control" id="editPriority" required>
+                            <option value="Low">🐢 Low - Minor issue</option>
+                            <option value="Medium">⚡ Medium - Normal priority</option>
+                            <option value="High">🔥 High - Critical issue</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-calendar"></i> Date Requested
+                        </label>
+                        <input type="datetime-local" class="form-control" id="editDateRequested" required>
+                    </div>
+                </div>
+
+                <div class="flex justify-between" style="margin-top: 30px;">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('editTicketModal')">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -421,6 +661,11 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="modal" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); display: none;">
+        <div class="spinner"></div>
+    </div>
+
     <script src="../script.js"></script>
     <script>
         // State Management
@@ -481,14 +726,138 @@ if (isset($_GET['client_id'])) {
             const table = document.getElementById('ticketsTable');
             const rows = table.getElementsByTagName('tr');
             
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
             for (let i = 1; i < rows.length; i++) {
                 if (status === 'all') {
                     rows[i].style.display = '';
+                } else if (status === 'unassigned') {
+                    const isUnassigned = rows[i].getAttribute('data-is-unassigned') === 'true';
+                    rows[i].style.display = isUnassigned ? '' : 'none';
                 } else {
                     const ticketStatus = rows[i].getAttribute('data-status');
                     rows[i].style.display = (ticketStatus && ticketStatus.toLowerCase() === status.toLowerCase()) ? '' : 'none';
                 }
             }
+        }
+
+        // Edit Ticket Functions
+        function editTicket(id) {
+            document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            showLoading();
+            
+            fetch(`../get-tickets.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    
+                    if (data.error) {
+                        showNotification(data.error, 'danger');
+                        return;
+                    }
+                    
+                    // Populate form fields
+                    document.getElementById('editTicketId').value = data.ticket_id;
+                    document.getElementById('editTicketIdDisplay').textContent = data.ticket_id;
+                    document.getElementById('editCompanyName').value = data.company_name || '';
+                    document.getElementById('editContactPerson').value = data.contact_person || '';
+                    document.getElementById('editContactNumber').value = data.contact_number || '';
+                    document.getElementById('editEmail').value = data.email || '';
+                    
+                    // Set product
+                    const productSelect = document.getElementById('editProduct');
+                    const productValue = data.product_name ? `${data.product_name} v${data.version}` : '';
+                    if (productValue) {
+                        for (let option of productSelect.options) {
+                            if (option.value === productValue) {
+                                option.selected = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Set concern
+                    const concernSelect = document.getElementById('editConcern');
+                    if (data.concern_type) {
+                        for (let option of concernSelect.options) {
+                            if (option.value === data.concern_type) {
+                                option.selected = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    document.getElementById('editDescription').value = data.concern_description || '';
+                    document.getElementById('editPriority').value = data.priority || 'Medium';
+                    
+                    // Format date for datetime-local
+                    if (data.date_requested) {
+                        const date = new Date(data.date_requested);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        document.getElementById('editDateRequested').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    }
+                    
+                    openModal('editTicketModal');
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error:', error);
+                    showNotification('Error fetching ticket details: ' + error.message, 'danger');
+                });
+        }
+
+        function submitEditTicket(event) {
+            event.preventDefault();
+            
+            const formData = {
+                ticket_id: document.getElementById('editTicketId').value,
+                contact_person: document.getElementById('editContactPerson').value,
+                contact_number: document.getElementById('editContactNumber').value,
+                email: document.getElementById('editEmail').value,
+                product: document.getElementById('editProduct').value,
+                concern: document.getElementById('editConcern').value,
+                description: document.getElementById('editDescription').value,
+                priority: document.getElementById('editPriority').value,
+                date_requested: document.getElementById('editDateRequested').value
+            };
+            
+            showLoading();
+            
+            fetch('../update-ticket-details.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification('Ticket updated successfully!', 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showNotification('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('An error occurred while updating the ticket', 'danger');
+            });
         }
 
         // Assignment Functions
@@ -605,64 +974,64 @@ if (isset($_GET['client_id'])) {
         }
 
         // Ticket View Function
-function viewTicket(id) {
-    document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
-        menu.classList.remove('show');
-    });
-    
-    showLoading();
-    
-    fetch(`../get-tickets.php?id=${id}`)
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
+        function viewTicket(id) {
+            document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
             
-            if (data.error) {
-                showNotification(data.error, 'danger');
-                return;
-            }
+            showLoading();
             
-            const statusClass = (data.status || 'pending').toLowerCase().replace(' ', '');
-            const priorityClass = (data.priority || 'medium').toLowerCase();
-            
-            // Format contact number to ensure it displays properly
-            const contactNumber = data.contact_number || 'Not provided';
-            const email = data.email || 'Not provided';
-            
-            document.getElementById('ticketDetails').innerHTML = `
-                <div style="display: grid; gap: 15px;">
-                    <p><strong><i class="fas fa-hashtag"></i> Ticket ID:</strong> #${data.ticket_id}</p>
-                    <p><strong><i class="fas fa-building"></i> Company:</strong> ${data.company_name || 'N/A'}</p>
-                    <p><strong><i class="fas fa-user"></i> Contact Person:</strong> ${data.contact_person || 'N/A'}</p>
-                    <p><strong><i class="fas fa-phone"></i> Contact Number:</strong> ${contactNumber}</p>
-                    <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${email}</p>
-                    <p><strong><i class="fas fa-box"></i> Product:</strong> ${data.product_name || 'N/A'} ${data.version || ''}</p>
-                    <p><strong><i class="fas fa-exclamation-triangle"></i> Concern Type:</strong> ${data.concern_type || 'N/A'}</p>
-                    <p><strong><i class="fas fa-align-left"></i> Description:</strong></p>
-                    <div style="background: var(--bg-secondary); padding: 15px; border-radius: 10px; white-space: pre-line;">${data.concern_description || ''}</div>
-                    <p><strong><i class="fas fa-flag"></i> Priority:</strong> 
-                        <span class='badge badge-${priorityClass}'>${data.priority}</span>
-                    </p>
-                    <p><strong><i class="fas fa-info-circle"></i> Status:</strong> 
-                        <span class='badge badge-${statusClass}'>${data.status}</span>
-                    </p>
-                    <p><strong><i class="fas fa-calendar"></i> Date Requested:</strong> 
-                        ${data.date_requested ? new Date(data.date_requested).toLocaleString() : 'N/A'}
-                    </p>
-                    ${data.tech_firstname ? `<p><strong><i class="fas fa-user-cog"></i> Assigned To:</strong> ${data.tech_firstname} ${data.tech_lastname}</p>` : ''}
-                    ${data.solution ? `<p><strong><i class="fas fa-check-circle"></i> Solution:</strong> ${data.solution}</p>` : ''}
-                    ${data.finish_date ? `<p><strong><i class="fas fa-clock"></i> Date Finished:</strong> ${new Date(data.finish_date).toLocaleString()}</p>` : ''}
-                </div>
-            `;
-            
-            openModal('viewTicketModal');
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Error:', error);
-            showNotification('Error fetching ticket details: ' + error.message, 'danger');
-        });
-}
+            fetch(`../get-tickets.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    
+                    if (data.error) {
+                        showNotification(data.error, 'danger');
+                        return;
+                    }
+                    
+                    const statusClass = (data.status || 'pending').toLowerCase().replace(' ', '');
+                    const priorityClass = (data.priority || 'medium').toLowerCase();
+                    
+                    // Format contact number to ensure it displays properly
+                    const contactNumber = data.contact_number || 'Not provided';
+                    const email = data.email || 'Not provided';
+                    
+                    document.getElementById('ticketDetails').innerHTML = `
+                        <div style="display: grid; gap: 15px;">
+                            <p><strong><i class="fas fa-hashtag"></i> Ticket ID:</strong> #${data.ticket_id}</p>
+                            <p><strong><i class="fas fa-building"></i> Company:</strong> ${data.company_name || 'N/A'}</p>
+                            <p><strong><i class="fas fa-user"></i> Contact Person:</strong> ${data.contact_person || 'N/A'}</p>
+                            <p><strong><i class="fas fa-phone"></i> Contact Number:</strong> ${contactNumber}</p>
+                            <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${email}</p>
+                            <p><strong><i class="fas fa-box"></i> Product:</strong> ${data.product_name || 'N/A'} ${data.version || ''}</p>
+                            <p><strong><i class="fas fa-exclamation-triangle"></i> Concern Type:</strong> ${data.concern_type || 'N/A'}</p>
+                            <p><strong><i class="fas fa-align-left"></i> Description:</strong></p>
+                            <div style="background: var(--bg-secondary); padding: 15px; border-radius: 10px; white-space: pre-line;">${data.concern_description || ''}</div>
+                            <p><strong><i class="fas fa-flag"></i> Priority:</strong> 
+                                <span class='badge badge-${priorityClass}'>${data.priority}</span>
+                            </p>
+                            <p><strong><i class="fas fa-info-circle"></i> Status:</strong> 
+                                <span class='badge badge-${statusClass}'>${data.status}</span>
+                            </p>
+                            <p><strong><i class="fas fa-calendar"></i> Date Requested:</strong> 
+                                ${data.date_requested ? new Date(data.date_requested).toLocaleString() : 'N/A'}
+                            </p>
+                            ${data.tech_firstname ? `<p><strong><i class="fas fa-user-cog"></i> Assigned To:</strong> ${data.tech_firstname} ${data.tech_lastname}</p>` : ''}
+                            ${data.solution ? `<p><strong><i class="fas fa-check-circle"></i> Solution:</strong> ${data.solution}</p>` : ''}
+                            ${data.finish_date ? `<p><strong><i class="fas fa-clock"></i> Date Finished:</strong> ${new Date(data.finish_date).toLocaleString()}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    openModal('viewTicketModal');
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error:', error);
+                    showNotification('Error fetching ticket details: ' + error.message, 'danger');
+                });
+        }
 
         // Status Update Functions
         function updateStatus(id) {
@@ -837,21 +1206,11 @@ function viewTicket(id) {
 
         // Loading Functions
         function showLoading() {
-            if (!document.getElementById('loadingSpinner')) {
-                const spinner = document.createElement('div');
-                spinner.id = 'loadingSpinner';
-                spinner.className = 'modal';
-                spinner.style.background = 'rgba(0, 0, 0, 0.5)';
-                spinner.style.backdropFilter = 'blur(3px)';
-                spinner.innerHTML = '<div class="spinner"></div>';
-                spinner.style.display = 'flex';
-                document.body.appendChild(spinner);
-            }
+            document.getElementById('loadingSpinner').style.display = 'flex';
         }
 
         function hideLoading() {
-            const spinner = document.getElementById('loadingSpinner');
-            if (spinner) spinner.remove();
+            document.getElementById('loadingSpinner').style.display = 'none';
         }
 
         // Notification Function
@@ -886,7 +1245,7 @@ function viewTicket(id) {
 
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const modals = ['viewTicketModal', 'assignModal', 'reassignModal', 'statusModal', 'deleteModal'];
+            const modals = ['viewTicketModal', 'editTicketModal', 'assignModal', 'reassignModal', 'statusModal', 'deleteModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -894,6 +1253,15 @@ function viewTicket(id) {
                 }
             });
         }
+
+        // Set active filter based on URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterParam = urlParams.get('filter');
+            if (filterParam) {
+                filterTickets(filterParam);
+            }
+        });
     </script>
 </body>
 </html>
