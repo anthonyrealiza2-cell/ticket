@@ -7,10 +7,13 @@ require_once '../database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports - TicketFlow</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/report.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -33,38 +36,18 @@ require_once '../database.php';
         <!-- Header -->
         <div class="flex justify-between" style="margin-bottom: 30px;">
             <h1 style="color: var(--text-primary);">Analytics & Reports</h1>
-            <div class="flex" style="gap: 10px;">
-                <button class="btn btn-success" onclick="exportReport('pdf')">
-                    <i class="fas fa-file-pdf"></i> Export PDF
+            <div class="export-buttons">
+                <button class="export-btn-pdf" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Export PDF</span>
                 </button>
-                <button class="btn btn-primary" onclick="exportReport('csv')">
-                    <i class="fas fa-file-csv"></i> Export CSV
-                </button>
-            </div>
-        </div>
-
-        <!-- Date Filter -->
-        <div class="card" style="margin-bottom: 30px;">
-            <div class="flex justify-between align-center" style="flex-wrap: wrap; gap: 15px;">
-                <div class="flex" style="gap: 15px; flex-wrap: wrap;">
-                    <div>
-                        <label class="form-label">From Date</label>
-                        <input type="date" id="dateFrom" class="form-control" style="width: 200px;" 
-                               value="<?php echo date('Y-m-d', strtotime('-30 days')); ?>">
-                    </div>
-                    <div>
-                        <label class="form-label">To Date</label>
-                        <input type="date" id="dateTo" class="form-control" style="width: 200px;" 
-                               value="<?php echo date('Y-m-d'); ?>">
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="applyDateFilter()" style="height: fit-content;">
-                    <i class="fas fa-filter"></i> Apply Filter
+                <button class="export-btn-excel" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Export Excel</span>
                 </button>
             </div>
         </div>
 
-        <!-- Summary Cards -->
         <?php
         // Get date filters
         $dateFrom = isset($_GET['from']) ? $_GET['from'] : date('Y-m-d', strtotime('-30 days'));
@@ -89,71 +72,126 @@ require_once '../database.php';
         $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100, 1) : 0;
         ?>
 
-        <div class="stats-grid" style="margin-bottom: 30px;">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
-                <div class="stat-info">
-                    <h3>Total Tickets</h3>
-                    <div class="stat-number"><?php echo $totalTickets; ?></div>
+        <!-- Date Filter -->
+        <div class="report-filters">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label class="filter-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        From Date
+                    </label>
+                    <input type="date" id="dateFrom" class="form-control" 
+                           value="<?php echo $dateFrom; ?>">
+                </div>
+                
+                <div class="filter-item">
+                    <label class="filter-label">
+                        <i class="fas fa-calendar-check"></i>
+                        To Date
+                    </label>
+                    <input type="date" id="dateTo" class="form-control" 
+                           value="<?php echo $dateTo; ?>">
+                </div>
+                
+                <div class="filter-item filter-button">
+                    <label class="filter-label">&nbsp;</label>
+                    <button class="btn btn-primary" onclick="applyDateFilter()">
+                        <i class="fas fa-filter"></i> Apply Filter
+                    </button>
                 </div>
             </div>
             
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-check-circle" style="background: var(--success);"></i></div>
-                <div class="stat-info">
-                    <h3>Resolved</h3>
-                    <div class="stat-number"><?php echo $resolvedTickets; ?></div>
+            <!-- Quick filter options -->
+            <div class="quick-filters">
+                <span class="quick-filter-label">
+                    <i class="fas fa-bolt"></i> Quick Select:
+                </span>
+                <div class="quick-filter-buttons">
+                    <button class="export-btn" onclick="setDateRange('today')">
+                        <i class="fas fa-sun"></i> Today
+                    </button>
+                    <button class="export-btn" onclick="setDateRange('yesterday')">
+                        <i class="fas fa-calendar-day"></i> Yesterday
+                    </button>
+                    <button class="export-btn" onclick="setDateRange('week')">
+                        <i class="fas fa-calendar-week"></i> This Week
+                    </button>
+                    <button class="export-btn" onclick="setDateRange('month')">
+                        <i class="fas fa-calendar-alt"></i> This Month
+                    </button>
+                    <button class="export-btn" onclick="setDateRange('lastmonth')">
+                        <i class="fas fa-calendar-minus"></i> Last Month
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="value"><?php echo $totalTickets; ?></div>
+                <div class="label">Total Tickets</div>
+                <div class="trend">
+                    <i class="fas fa-ticket-alt"></i> All tickets in period
                 </div>
             </div>
             
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-clock" style="background: var(--warning);"></i></div>
-                <div class="stat-info">
-                    <h3>Pending</h3>
-                    <div class="stat-number"><?php echo $pendingTickets; ?></div>
+            <div class="summary-card">
+                <div class="value" style="color: var(--success);"><?php echo $resolvedTickets; ?></div>
+                <div class="label">Resolved</div>
+                <div class="trend trend-up">
+                    <i class="fas fa-arrow-up"></i> <?php echo $resolutionRate; ?>% resolution rate
                 </div>
             </div>
             
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-percent" style="background: var(--info);"></i></div>
-                <div class="stat-info">
-                    <h3>Resolution Rate</h3>
-                    <div class="stat-number"><?php echo $resolutionRate; ?>%</div>
+            <div class="summary-card">
+                <div class="value" style="color: var(--warning);"><?php echo $pendingTickets; ?></div>
+                <div class="label">Pending</div>
+                <div class="trend trend-down">
+                    <i class="fas fa-clock"></i> Awaiting action
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="value" style="color: var(--info);"><?php echo $resolutionRate; ?>%</div>
+                <div class="label">Resolution Rate</div>
+                <div class="trend">
+                    <i class="fas fa-chart-line"></i> Overall performance
                 </div>
             </div>
         </div>
 
         <!-- Charts Row 1 -->
-        <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 25px;">
+        <div class="stats-grid">
             <!-- Ticket Status Chart -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-chart-pie"></i> Ticket Status Distribution
                 </div>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-container">
                     <canvas id="statusChart"></canvas>
                 </div>
             </div>
 
-            <!-- Priority Distribution Chart (FIXED) -->
+            <!-- Priority Distribution Chart -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-chart-bar"></i> Priority Levels
                 </div>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-container">
                     <canvas id="priorityChart"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- Charts Row 2 -->
-        <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 25px;">
+        <div class="stats-grid">
             <!-- Daily Trends -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-chart-line"></i> Daily Ticket Trends
                 </div>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-container">
                     <canvas id="trendsChart"></canvas>
                 </div>
             </div>
@@ -163,7 +201,7 @@ require_once '../database.php';
                 <div class="card-header">
                     <i class="fas fa-trophy"></i> Top Technical Staff
                 </div>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-container">
                     <canvas id="techChart"></canvas>
                 </div>
             </div>
@@ -176,7 +214,7 @@ require_once '../database.php';
             </div>
             
             <?php
-            // Get priority breakdown (FIXED)
+            // Get priority breakdown
             $priorityStats = [];
             $priorities = ['Low', 'Medium', 'High'];
             foreach($priorities as $priority) {
@@ -196,30 +234,24 @@ require_once '../database.php';
                 $dailyLabels[] = date('M d', strtotime($date));
             }
             
-            // Get technical performance
+            // Get technical performance from view
             $techData = [];
             $techLabels = [];
-            $stmt = $pdo->prepare("
-                SELECT CONCAT(firstname, ' ', lastname) as name, 
-                       SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) as resolved,
-                       COUNT(t.ticket_id) as total
-                FROM technical_staff ts
-                LEFT JOIN tickets t ON ts.technical_id = t.technical_id 
-                    AND DATE(t.date_requested) BETWEEN ? AND ?
-                GROUP BY ts.technical_id
-                HAVING total > 0
-                ORDER BY resolved DESC
+            $stmt = $pdo->query("
+                SELECT full_name, performance_rate 
+                FROM vw_tech_performance 
+                WHERE total_ticket > 0
+                ORDER BY performance_rate DESC
                 LIMIT 5
             ");
-            $stmt->execute([$dateFrom, $dateTo]);
             while($row = $stmt->fetch()) {
-                $techLabels[] = $row['name'];
-                $techData[] = $row['total'] > 0 ? round(($row['resolved'] / $row['total']) * 100, 1) : 0;
+                $techLabels[] = $row['full_name'];
+                $techData[] = $row['performance_rate'];
             }
             ?>
 
             <div class="table-container">
-                <table>
+                <table id="statsTable">
                     <thead>
                         <tr>
                             <th>Metric</th>
@@ -269,6 +301,67 @@ require_once '../database.php';
 
     <script src="../script.js"></script>
     <script>
+    // Helper function to format date as YYYY-MM-DD
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Quick date range selection
+    function setDateRange(range) {
+        const today = new Date();
+        const fromDate = document.getElementById('dateFrom');
+        const toDate = document.getElementById('dateTo');
+        
+        // Remove active class from all quick filter buttons
+        document.querySelectorAll('.quick-filter-buttons .export-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        if(event.target) {
+            event.target.classList.add('active');
+        }
+        
+        switch(range) {
+            case 'today':
+                fromDate.value = formatDate(today);
+                toDate.value = formatDate(today);
+                break;
+                
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                fromDate.value = formatDate(yesterday);
+                toDate.value = formatDate(yesterday);
+                break;
+                
+            case 'week':
+                const weekStart = new Date(today);
+                const day = today.getDay();
+                const diff = day === 0 ? 6 : day - 1;
+                weekStart.setDate(today.getDate() - diff);
+                fromDate.value = formatDate(weekStart);
+                toDate.value = formatDate(today);
+                break;
+                
+            case 'month':
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                fromDate.value = formatDate(monthStart);
+                toDate.value = formatDate(today);
+                break;
+                
+            case 'lastmonth':
+                const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+                fromDate.value = formatDate(lastMonthStart);
+                toDate.value = formatDate(lastMonthEnd);
+                break;
+        }
+    }
+
     // Chart initialization
     document.addEventListener('DOMContentLoaded', function() {
         // Status Chart Data
@@ -322,7 +415,7 @@ require_once '../database.php';
             }
         });
 
-        // Priority Chart (FIXED - Now using proper data)
+        // Priority Chart
         new Chart(document.getElementById('priorityChart'), {
             type: 'bar',
             data: {
@@ -485,32 +578,73 @@ require_once '../database.php';
 
     function exportReport(format) {
         if(format === 'pdf') {
-            // For PDF, we'll use print
             window.print();
-        } else {
-            // Export to CSV
-            const data = [
-                ['Report Summary', 'Value'],
-                ['Date Range', `${document.getElementById('dateFrom').value} to ${document.getElementById('dateTo').value}`],
-                ['Total Tickets', '<?php echo $totalTickets; ?>'],
-                ['Resolved Tickets', '<?php echo $resolvedTickets; ?>'],
-                ['Pending Tickets', '<?php echo $pendingTickets; ?>'],
-                ['Resolution Rate', '<?php echo $resolutionRate; ?>%'],
-                [],
-                ['Priority Breakdown', 'Count'],
-                ['Low Priority', '<?php echo $priorityStats['Low']; ?>'],
-                ['Medium Priority', '<?php echo $priorityStats['Medium']; ?>'],
-                ['High Priority', '<?php echo $priorityStats['High']; ?>']
-            ];
-            
-            let csv = data.map(row => row.join(',')).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ticket_report_${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
+        } else if(format === 'excel') {
+            exportToExcel();
         }
+    }
+
+    function exportToExcel() {
+        // Get the current date for filename
+        const date = new Date();
+        const dateStr = date.toISOString().slice(0,10);
+        
+        // Prepare data for Excel
+        const data = [
+            ['TicketFlow Report', ''],
+            ['Date Range', `${document.getElementById('dateFrom').value} to ${document.getElementById('dateTo').value}`],
+            ['Generated On', new Date().toLocaleString()],
+            ['', ''],
+            ['SUMMARY STATISTICS', ''],
+            ['Total Tickets', '<?php echo $totalTickets; ?>'],
+            ['Resolved Tickets', '<?php echo $resolvedTickets; ?>'],
+            ['Pending Tickets', '<?php echo $pendingTickets; ?>'],
+            ['Resolution Rate', '<?php echo $resolutionRate; ?>%'],
+            ['', ''],
+            ['PRIORITY BREAKDOWN', ''],
+            ['Low Priority', '<?php echo $priorityStats['Low']; ?>'],
+            ['Medium Priority', '<?php echo $priorityStats['Medium']; ?>'],
+            ['High Priority', '<?php echo $priorityStats['High']; ?>'],
+            ['', ''],
+            ['STATUS DISTRIBUTION', ''],
+        ];
+        
+        // Add status distribution
+        <?php
+        foreach($statuses as $index => $status) {
+            echo "data.push(['$status', '{$statusStats[$index]}']);\n";
+        }
+        ?>
+        
+        // Add daily trends
+        data.push(['', '']);
+        data.push(['DAILY TRENDS (Last 7 Days)', '']);
+        <?php
+        for($i = 0; $i < count($dailyLabels); $i++) {
+            echo "data.push(['{$dailyLabels[$i]}', '{$dailyTrends[$i]}']);\n";
+        }
+        ?>
+        
+        // Add technical performance
+        data.push(['', '']);
+        data.push(['TOP TECHNICAL PERFORMANCE', '']);
+        <?php
+        for($i = 0; $i < count($techLabels); $i++) {
+            echo "data.push(['{$techLabels[$i]}', '{$techData[$i]}%']);\n";
+        }
+        ?>
+        
+        // Create worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Ticket Report');
+        
+        // Save file
+        XLSX.writeFile(wb, `ticket_report_${dateStr}.xlsx`);
+        
+        showNotification('Excel file downloaded successfully!', 'success');
     }
 
     function showNotification(message, type) {
@@ -532,29 +666,5 @@ require_once '../database.php';
         }, 3000);
     }
     </script>
-
-    <style>
-    /* Print styles for PDF export */
-    @media print {
-        .navbar, .btn, .modal, .search-box {
-            display: none !important;
-        }
-        
-        body {
-            background: white;
-            padding: 20px;
-        }
-        
-        .card {
-            border: 1px solid #ddd;
-            box-shadow: none;
-            break-inside: avoid;
-        }
-        
-        canvas {
-            max-height: 250px;
-        }
-    }
-    </style>
 </body>
 </html>

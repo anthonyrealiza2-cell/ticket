@@ -7,7 +7,10 @@ require_once '../database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Ticket - TicketFlow</title>
-    <link rel="stylesheet" href="../style.css">
+    <!-- <link rel="stylesheet" href="../style.css"> -->
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/new-tickets.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -69,7 +72,7 @@ require_once '../database.php';
                             <i class="fas fa-envelope"></i> Email Address
                         </label>
                         <input type="email" class="form-control" id="email" 
-                               placeholder="company@email.com" required>
+                               placeholder="company@email.com">
                     </div>
                 </div>
 

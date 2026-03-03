@@ -1,0 +1,380 @@
+.technical-page .tech-header {
+  background: var(--gradient-1);
+  padding: 25px;
+  border-radius: 24px;
+  margin-bottom: 25px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.technical-page .tech-header::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  animation: rotate 20s linear infinite;
+}
+
+.technical-page .tech-header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.technical-page .tech-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.technical-page .tech-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.technical-page .tech-stat-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.technical-page .tech-stat-card:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.technical-page .tech-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 5px;
+}
+
+.technical-page .tech-stat-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.technical-page .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-card);
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.technical-page .empty-state i {
+  font-size: 4rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.technical-page .empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.technical-page .empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.technical-page .back-button {
+  margin-bottom: 20px;
+}
+
+.technical-page .btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.technical-page .btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+/* Actions Menu Styles */
+.actions-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.actions-menu-btn {
+  background: var(--bg-hover);
+  border: none;
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actions-menu-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.actions-menu-btn i {
+  font-size: 1.2rem;
+}
+
+.actions-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 0;
+  min-width: 180px;
+  box-shadow: var(--shadow-lg);
+  z-index: 9999;
+  display: none;
+  animation: slideDown 0.2s ease;
+}
+
+.actions-dropdown.show {
+  display: block;
+}
+
+.actions-dropdown.show.upward {
+  top: auto;
+  bottom: 100%;
+  animation: slideUp 0.2s ease;
+}
+
+.actions-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.actions-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.actions-dropdown-item i {
+  width: 18px;
+  font-size: 1rem;
+}
+
+.actions-dropdown-item.view i {
+  color: var(--info);
+}
+.actions-dropdown-item.edit i {
+  color: var(--warning);
+}
+.actions-dropdown-item.delete i {
+  color: var(--danger);
+}
+
+.actions-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 8px 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fixed Table Container */
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  margin-top: 20px;
+  position: relative;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px;
+}
+
+/* Ensure the last column (actions) has enough space */
+td:last-child {
+  position: relative;
+  padding-right: 20px !important;
+}
+
+/* Fix for actions cell to prevent dropdown cutoff */
+td.actions-cell {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Ensure the dropdown doesn't get clipped */
+.actions-menu-container {
+  overflow: visible !important;
+}
+
+/* Delete Modal */
+.delete-warning {
+  text-align: center;
+  padding: 20px;
+}
+
+.delete-warning i {
+  font-size: 4rem;
+  color: var(--danger);
+  margin-bottom: 15px;
+}
+
+.delete-warning h3 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.delete-warning p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.btn-delete {
+  background: var(--gradient-3);
+  color: white;
+}
+
+.btn-delete:hover {
+  box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
+}
+
+.btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+/* Ticket details in modal */
+.technical-page #ticketDetails {
+  display: grid;
+  gap: 15px;
+}
+
+.technical-page #ticketDetails p {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.technical-page #ticketDetails p strong {
+  min-width: 130px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.technical-page #ticketDetails p strong i {
+  color: var(--accent-primary);
+  width: 20px;
+}
+
+.technical-page #ticketDetails p span {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.technical-page #ticketDetails .description-box {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 8px;
+  white-space: pre-line;
+  line-height: 1.6;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* Export button */
+.btn-excel {
+  background: var(--gradient-2);
+  color: white;
+}
+
+.btn-excel:hover {
+  box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4);
+}

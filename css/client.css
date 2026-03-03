@@ -1,0 +1,522 @@
+/* client.css - Complete Client Management Styles */
+
+/* Page Header */
+.clients-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.clients-page .page-header h1 {
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+/* Card Styling */
+.clients-page .card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 25px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.clients-page .card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-primary);
+}
+
+/* Table Container */
+.clients-page .table-container {
+    overflow-x: auto;
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    margin-top: 10px;
+}
+
+/* Table Styles */
+.clients-page table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1300px;
+}
+
+.clients-page th {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    padding: 18px 15px;
+    font-weight: 600;
+    text-align: left;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.clients-page td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+.clients-page tr:hover td {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Company name in table */
+.clients-page td strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Client ID styling */
+.clients-page td:first-child {
+    color: var(--accent-primary);
+    font-weight: 600;
+    font-family: monospace;
+    font-size: 0.95rem;
+}
+
+/* Button Styles */
+.clients-page .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.clients-page .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    z-index: 0;
+}
+
+.clients-page .btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.clients-page .btn i, 
+.clients-page .btn span {
+    position: relative;
+    z-index: 1;
+}
+
+.clients-page .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Button variants */
+.clients-page .btn-primary {
+    background: var(--gradient-1);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.clients-page .btn-primary:hover {
+    box-shadow: 0 10px 25px var(--accent-glow);
+}
+
+.clients-page .btn-danger {
+    background: var(--gradient-3);
+    color: white;
+}
+
+.clients-page .btn-danger:hover {
+    box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
+}
+
+.clients-page .btn-info {
+    background: var(--info);
+    color: white;
+}
+
+.clients-page .btn-info:hover {
+    background: #5fa3e0;
+    box-shadow: 0 10px 25px rgba(116, 185, 255, 0.3);
+}
+
+/* Small button variant */
+.clients-page .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    min-width: 36px;
+}
+
+.clients-page .btn-sm i {
+    font-size: 0.9rem;
+}
+
+/* Action buttons group */
+.clients-page td .btn-sm {
+    margin: 0 3px;
+}
+
+/* Badge Styles */
+.clients-page .badge {
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    letter-spacing: 0.3px;
+    text-transform: capitalize;
+    min-width: 70px;
+    text-align: center;
+}
+
+/* Badge variants for ticket counts */
+.clients-page .badge-info {
+    background: rgba(116, 185, 255, 0.15);
+    color: var(--info);
+    border: 1px solid var(--info);
+}
+
+.clients-page .badge-warning {
+    background: rgba(253, 203, 110, 0.15);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.clients-page .badge-success {
+    background: rgba(0, 184, 148, 0.15);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+/* Form Styles for Modals */
+.clients-page .form-group {
+    margin-bottom: 20px;
+}
+
+.clients-page .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.clients-page .form-label i {
+    color: var(--accent-primary);
+    margin-right: 8px;
+    width: 18px;
+}
+
+.clients-page .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.clients-page .form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+    background: var(--bg-hover);
+}
+
+.clients-page .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Modal Action Buttons */
+.clients-page .modal .flex.justify-between {
+    margin-top: 25px;
+    gap: 15px;
+}
+
+.clients-page .modal .btn {
+    min-width: 120px;
+}
+
+/* Client Details in Modal */
+.clients-page #clientDetails {
+    display: grid;
+    gap: 15px;
+}
+
+.clients-page #clientDetails p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    margin: 0;
+    border: 1px solid var(--border-color);
+}
+
+.clients-page #clientDetails p strong {
+    min-width: 130px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.clients-page #clientDetails p strong i {
+    color: var(--accent-primary);
+    width: 20px;
+    font-size: 1.1rem;
+}
+
+.clients-page #clientDetails p span {
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+/* Loading Spinner */
+.clients-page #loadingSpinner.modal {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.clients-page .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent-primary);
+    border-right-color: var(--accent-secondary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Notification Styles */
+.clients-page .alert {
+    padding: 16px 24px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+}
+
+.clients-page .alert i {
+    font-size: 1.3rem;
+}
+
+.clients-page .alert-success {
+    background: rgba(0, 184, 148, 0.15);
+    border-left-color: var(--success);
+    color: var(--success);
+}
+
+.clients-page .alert-danger {
+    background: rgba(255, 118, 117, 0.15);
+    border-left-color: var(--danger);
+    color: var(--danger);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .clients-page .card {
+        padding: 20px;
+    }
+    
+    .clients-page .page-header h1 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .clients-page .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .clients-page .page-header .btn {
+        width: 100%;
+    }
+    
+    .clients-page .table-container {
+        border-radius: 12px;
+    }
+    
+    .clients-page th {
+        padding: 15px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .clients-page td {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .clients-page .container {
+        padding: 15px;
+    }
+    
+    .clients-page .card {
+        padding: 15px;
+    }
+    
+    .clients-page .page-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .clients-page .btn-sm {
+        padding: 6px 12px;
+    }
+    
+    .clients-page .badge {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        min-width: 60px;
+    }
+    
+    .clients-page #clientDetails p {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .clients-page #clientDetails p strong {
+        min-width: auto;
+    }
+    
+    .clients-page .alert {
+        min-width: 250px;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+        font-size: 0.9rem;
+        padding: 12px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .clients-page .card {
+        padding: 12px;
+    }
+    
+    .clients-page .page-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .clients-page .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .clients-page td .btn-sm {
+        padding: 5px 10px;
+        margin: 2px;
+    }
+}
+
+/* Utility Classes */
+.clients-page .flex {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.clients-page .justify-between {
+    justify-content: space-between;
+}
+
+.clients-page .justify-end {
+    justify-content: flex-end;
+}
+
+.clients-page .mt-20 { margin-top: 20px; }
+.clients-page .mb-20 { margin-bottom: 20px; }
+
+/* Table row transition */
+.clients-page tr {
+    transition: all 0.2s ease;
+}
+
+/* Empty State */
+.clients-page .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.clients-page .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: var(--border-color);
+}
+
+.clients-page .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+/* Keyframes */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

@@ -1,0 +1,549 @@
+/* technical.css - Technical Staff Management Styles */
+
+/* Page Header */
+.technical-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.technical-page .page-header h1 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Stats Grid for Performance Overview */
+.technical-page .technical-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.technical-page .technical-stat-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.technical-page .technical-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-1);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.technical-page .technical-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
+}
+
+.technical-page .technical-stat-card:hover::before {
+  transform: scaleX(1);
+}
+
+.technical-page .technical-stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--gradient-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.technical-page .technical-stat-info h3 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.technical-page .technical-stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Card Styling - Override global card */
+.technical-page .card {
+  background: var(--bg-card) !important;
+  border-radius: 24px !important;
+  padding: 25px !important;
+  box-shadow: var(--shadow-md) !important;
+  margin-bottom: 25px !important;
+  border: 1px solid var(--border-color) !important;
+  transition: all 0.3s ease !important;
+}
+
+.technical-page .card:hover {
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+.technical-page .card-header {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 20px !important;
+  color: var(--text-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding-bottom: 15px !important;
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+.technical-page .card-header i {
+  color: var(--accent-primary) !important;
+  font-size: 1.8rem !important;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Table Container */
+.technical-page .table-container {
+  overflow-x: auto;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  margin-top: 10px;
+}
+
+/* Table Styles - Override global table */
+.technical-page table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1400px;
+}
+
+.technical-page th {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+  padding: 18px 15px !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+.technical-page td {
+  padding: 15px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  vertical-align: middle !important;
+}
+
+.technical-page tr:hover td {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Badge Styles - Override global badges */
+.technical-page .badge {
+  padding: 6px 12px !important;
+  border-radius: 30px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+  letter-spacing: 0.3px !important;
+  text-transform: capitalize !important;
+  min-width: 70px !important;
+  text-align: center !important;
+}
+
+.technical-page .badge-info {
+  background: rgba(116, 185, 255, 0.15) !important;
+  color: var(--info) !important;
+  border: 1px solid var(--info) !important;
+}
+
+.technical-page .badge-success {
+  background: rgba(0, 184, 148, 0.15) !important;
+  color: var(--success) !important;
+  border: 1px solid var(--success) !important;
+}
+
+.technical-page .badge-warning {
+  background: rgba(253, 203, 110, 0.15) !important;
+  color: var(--warning) !important;
+  border: 1px solid var(--warning) !important;
+}
+
+/* Button Styles - Override global buttons */
+.technical-page .btn {
+  padding: 12px 24px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  letter-spacing: 0.3px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.technical-page .btn::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translate(-50%, -50%) !important;
+  transition:
+    width 0.6s,
+    height 0.6s !important;
+  z-index: 0 !important;
+}
+
+.technical-page .btn:hover::before {
+  width: 300px !important;
+  height: 300px !important;
+}
+
+.technical-page .btn i,
+.technical-page .btn span {
+  position: relative;
+  z-index: 1;
+}
+
+.technical-page .btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Button variants */
+.technical-page .btn-primary {
+  background: var(--gradient-1) !important;
+  color: white !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.technical-page .btn-primary:hover {
+  box-shadow: 0 10px 25px var(--accent-glow) !important;
+}
+
+.technical-page .btn-success {
+  background: var(--gradient-2) !important;
+  color: white !important;
+}
+
+.technical-page .btn-success:hover {
+  background: linear-gradient(145deg, #00a884, #00b8b4) !important;
+}
+
+.technical-page .btn-info {
+  background: var(--info) !important;
+  color: white !important;
+}
+
+.technical-page .btn-info:hover {
+  background: #5fa3e0 !important;
+  box-shadow: 0 10px 25px rgba(116, 185, 255, 0.3) !important;
+}
+
+.technical-page .btn-danger {
+  background: var(--gradient-3) !important;
+  color: white !important;
+}
+
+/* Small button variant - IMPROVED SPACING */
+.technical-page .btn-sm {
+  padding: 8px 12px !important;
+  font-size: 0.85rem !important;
+  border-radius: 10px !important;
+  min-width: 36px !important;
+  margin: 4px 2px !important; /* Added margin for spacing */
+}
+
+.technical-page .btn-sm i {
+  font-size: 0.9rem !important;
+}
+
+/* Action buttons group - IMPROVED SPACING */
+.technical-page td .btn-sm {
+  margin: 6px 4px !important; /* Increased margin for better spacing */
+  display: inline-flex; /* Ensure proper alignment */
+  vertical-align: middle; /* Align buttons properly */
+}
+
+/* Add a container for action buttons to improve spacing */
+.technical-page .action-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Specific styling for the actions cell */
+.technical-page td:last-child {
+  white-space: nowrap;
+  padding: 12px 10px !important; /* Adjusted padding for better spacing */
+}
+
+/* Add a subtle separator between buttons if needed */
+.technical-page td .btn-sm:not(:last-child) {
+  margin-right: 6px;
+}
+
+/* Ensure buttons don't stick to cell edges */
+.technical-page td .btn-sm:first-child {
+  margin-left: 2px;
+}
+
+.technical-page td .btn-sm:last-child {
+  margin-right: 2px;
+}
+
+/* Progress Bar */
+.technical-page .progress-bar {
+  background: var(--bg-secondary) !important;
+  border-radius: 30px !important;
+  height: 25px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  width: 100px !important;
+}
+
+.technical-page .progress {
+  background: var(--gradient-1) !important;
+  height: 100% !important;
+  border-radius: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: white !important;
+  transition: width 1s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.technical-page .progress::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  ) !important;
+  animation: shimmer 2s infinite !important;
+}
+
+/* Form Styles for Modals */
+.technical-page .form-group {
+  margin-bottom: 20px;
+}
+
+.technical-page .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.technical-page .form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.technical-page .form-label i {
+  color: var(--accent-primary);
+  margin-right: 8px;
+  width: 18px;
+}
+
+.technical-page .form-control {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  font-family: "Inter", sans-serif;
+}
+
+.technical-page .form-control:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+  background: var(--bg-hover);
+}
+
+.technical-page .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+/* Modal Styles */
+.technical-page .modal .flex.justify-between {
+  margin-top: 25px;
+  gap: 15px;
+}
+
+.technical-page .modal .btn {
+  min-width: 120px;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .technical-page .technical-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .technical-page .card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  .technical-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .technical-page .page-header .btn {
+    width: 100%;
+  }
+
+  .technical-page .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .technical-page .technical-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .technical-page .technical-stat-card {
+    padding: 15px;
+  }
+
+  .technical-page .technical-stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .technical-page .technical-stat-number {
+    font-size: 1.5rem;
+  }
+
+  .technical-page .card {
+    padding: 15px;
+  }
+
+  .technical-page .card-header {
+    font-size: 1.3rem;
+  }
+
+  /* Responsive button spacing */
+  .technical-page .btn-sm {
+    padding: 6px 10px !important;
+    margin: 4px 2px !important;
+  }
+
+  .technical-page td .btn-sm {
+    margin: 4px 2px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .technical-page .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .technical-page .btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* Stack buttons vertically on very small screens */
+  .technical-page td .btn-sm {
+    margin: 4px 2px !important;
+    display: inline-block;
+  }
+}
+
+/* Utility Classes */
+.technical-page .flex {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.technical-page .justify-between {
+  justify-content: space-between;
+}
+
+.technical-page .justify-end {
+  justify-content: flex-end;
+}
+
+.technical-page .mt-20 {
+  margin-top: 20px;
+}
+.technical-page .mb-20 {
+  margin-bottom: 20px;
+}

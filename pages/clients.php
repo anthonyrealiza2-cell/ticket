@@ -7,11 +7,15 @@ require_once '../database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clients - TicketFlow</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/modal.css">
+    <link rel="stylesheet" href="../css/client.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="clients-page">
     <div class="container">
         <!-- Navbar -->
         <nav class="navbar">
@@ -30,17 +34,22 @@ require_once '../database.php';
         </nav>
 
         <!-- Header -->
-        <div class="flex justify-between" style="margin-bottom: 20px;">
-            <h1 style="color: var(--text-primary);">Client Management</h1>
-            <button class="btn btn-primary" onclick="openAddClientModal()">
-                <i class="fas fa-plus-circle"></i> Add New Client
-            </button>
+        <div class="flex justify-between page-header" style="margin-bottom: 20px;">
+            <h1>Client Management</h1>
+            <div class="flex" style="gap: 10px;">
+                <button class="btn btn-success" onclick="exportToExcel()" style="background: var(--gradient-2);">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+                <!-- <button class="btn btn-primary" onclick="openAddClientModal()">
+                    <i class="fas fa-plus-circle"></i> Add New Client
+                </button> -->
+            </div>
         </div>
 
-        <!-- Clients Table (ACTIONS ONLY VIEW) -->
+        <!-- Clients Table -->
         <div class="card">
             <div class="table-container">
-                <table>
+                <table id="clientsTable">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -51,18 +60,13 @@ require_once '../database.php';
                             <th>Total Tickets</th>
                             <th>Open Tickets</th>
                             <th>Resolved</th>
-                            <th>Joined Date</th>
+                            <th>Last Ticket</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $pdo->query("SELECT c.*, 
-                                             (SELECT COUNT(*) FROM tickets WHERE company_id = c.client_id) as total_tickets,
-                                             (SELECT COUNT(*) FROM tickets WHERE company_id = c.client_id AND status IN ('Pending', 'Assigned', 'In Progress')) as open_tickets,
-                                             (SELECT COUNT(*) FROM tickets WHERE company_id = c.client_id AND status = 'Resolved') as resolved_tickets
-                                             FROM clients c 
-                                             ORDER BY c.created_at DESC");
+                        $stmt = $pdo->query("SELECT * FROM vw_client_stats ORDER BY last_ticket_date DESC");
                         while($client = $stmt->fetch()) {
                             echo "<tr>";
                             echo "<td>#{$client['client_id']}</td>";
@@ -73,7 +77,7 @@ require_once '../database.php';
                             echo "<td><span class='badge badge-info'>{$client['total_tickets']}</span></td>";
                             echo "<td><span class='badge badge-warning'>{$client['open_tickets']}</span></td>";
                             echo "<td><span class='badge badge-success'>{$client['resolved_tickets']}</span></td>";
-                            echo "<td>" . date('M d, Y', strtotime($client['created_at'])) . "</td>";
+                            echo "<td>" . ($client['last_ticket_date'] ? date('M d, Y', strtotime($client['last_ticket_date'])) : 'No tickets') . "</td>";
                             echo "<td>
                                     <button class='btn btn-primary btn-sm' onclick='viewClientTickets({$client['client_id']})' title='View Tickets'>
                                         <i class='fas fa-ticket-alt'></i>
@@ -199,8 +203,85 @@ require_once '../database.php';
             });
     }
 
-    function viewClient(id) {
-        viewClientDetails(id);
+    function exportToExcel() {
+        // Get table data
+        const table = document.getElementById('clientsTable');
+        const rows = table.querySelectorAll('tr');
+        
+        // Prepare data array for Excel
+        const data = [];
+        
+        // Get headers (excluding Actions column)
+        const headers = [];
+        const headerCells = rows[0].querySelectorAll('th');
+        for (let i = 0; i < headerCells.length - 1; i++) {
+            headers.push(headerCells[i].innerText);
+        }
+        data.push(headers);
+        
+        // Get rows data (excluding Actions column)
+        for (let i = 1; i < rows.length; i++) {
+            const row = [];
+            const cells = rows[i].querySelectorAll('td');
+            
+            // Process each cell except the last one (Actions)
+            for (let j = 0; j < cells.length - 1; j++) {
+                let cellValue = cells[j].innerText.trim();
+                
+                // Remove # symbol from ID
+                if (j === 0) {
+                    cellValue = cellValue.replace('#', '');
+                }
+                // Remove any HTML tags from badge values
+                else if (j >= 5 && j <= 7) {
+                    // Extract just the number from badge spans
+                    const badgeMatch = cellValue.match(/\d+/);
+                    if (badgeMatch) {
+                        cellValue = badgeMatch[0];
+                    }
+                }
+                
+                row.push(cellValue);
+            }
+            data.push(row);
+        }
+        
+        // Create worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Set column widths for better readability
+        const colWidths = [
+            { wch: 10 }, // ID
+            { wch: 30 }, // Company Name
+            { wch: 25 }, // Contact Person
+            { wch: 20 }, // Contact Number
+            { wch: 35 }, // Email
+            { wch: 15 }, // Total Tickets
+            { wch: 15 }, // Open Tickets
+            { wch: 15 }, // Resolved
+            { wch: 20 }  // Last Ticket
+        ];
+        ws['!cols'] = colWidths;
+        
+        // Apply text format to specific columns to preserve leading zeros
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r; R <= range.e.r; R++) {
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
+                if (!ws[cell_ref]) continue;
+                
+                // Set cell type to string for ID (col 0) and Contact Number (col 3)
+                if (C === 0 || C === 3) {
+                    ws[cell_ref].t = 's'; // Set cell type to string
+                }
+            }
+        }
+        
+        XLSX.utils.book_append_sheet(wb, ws, 'Clients');
+        XLSX.writeFile(wb, `clients_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        
+        showNotification('Excel file downloaded successfully!', 'success');
     }
 
     function showLoading() {
