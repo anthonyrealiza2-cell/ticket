@@ -63,13 +63,79 @@ require_once '../database.php';
         $stmt->execute([$dateFrom, $dateTo]);
         $resolvedTickets = $stmt->fetch()['total'];
         
+        // Closed tickets
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Closed' AND DATE(date_requested) BETWEEN ? AND ?");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $closedTickets = $stmt->fetch()['total'];
+        
         // Pending tickets
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Pending' AND DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
-        $pendingTickets = $stmt->fetch()['total'];
+        $pendingTickets = $stmt->fetch()['count'] ?? 0;
+        
+        // In Progress tickets
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'In Progress' AND DATE(date_requested) BETWEEN ? AND ?");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $inProgressTickets = $stmt->fetch()['count'] ?? 0;
+        
+        // Assigned tickets
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Assigned' AND DATE(date_requested) BETWEEN ? AND ?");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $assignedTickets = $stmt->fetch()['count'] ?? 0;
+        
+        // Total completed (Resolved + Closed)
+        $completedTickets = $resolvedTickets + $closedTickets;
         
         // Resolution rate
-        $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100, 1) : 0;
+        $resolutionRate = $totalTickets > 0 ? round(($completedTickets / $totalTickets) * 100, 1) : 0;
+        
+        // Get solution statistics
+        $solutionStats = [];
+        $stmt = $pdo->prepare("
+            SELECT 
+                COUNT(*) as total_solved,
+                AVG(LENGTH(solution)) as avg_solution_length,
+                COUNT(CASE WHEN solution IS NOT NULL AND solution != '' THEN 1 END) as with_solution,
+                COUNT(CASE WHEN solution IS NULL OR solution = '' THEN 1 END) as without_solution
+            FROM tickets 
+            WHERE status IN ('Resolved', 'Closed') 
+            AND DATE(date_requested) BETWEEN ? AND ?
+        ");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $solutionStats = $stmt->fetch();
+        
+        // Get most common solutions/remarks
+        $commonSolutions = [];
+        $stmt = $pdo->prepare("
+            SELECT 
+                solution,
+                COUNT(*) as frequency
+            FROM tickets 
+            WHERE status IN ('Resolved', 'Closed') 
+            AND solution IS NOT NULL 
+            AND solution != ''
+            AND DATE(date_requested) BETWEEN ? AND ?
+            GROUP BY solution
+            ORDER BY frequency DESC
+            LIMIT 10
+        ");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $commonSolutions = $stmt->fetchAll();
+        
+        // Get resolution time statistics
+        $resolutionTimeStats = [];
+        $stmt = $pdo->prepare("
+            SELECT 
+                AVG(TIMESTAMPDIFF(HOUR, date_requested, finish_date)) as avg_hours,
+                MIN(TIMESTAMPDIFF(HOUR, date_requested, finish_date)) as min_hours,
+                MAX(TIMESTAMPDIFF(HOUR, date_requested, finish_date)) as max_hours
+            FROM tickets 
+            WHERE status IN ('Resolved', 'Closed') 
+            AND finish_date IS NOT NULL
+            AND DATE(date_requested) BETWEEN ? AND ?
+        ");
+        $stmt->execute([$dateFrom, $dateTo]);
+        $resolutionTimeStats = $stmt->fetch();
         ?>
 
         <!-- Date Filter -->
@@ -137,18 +203,18 @@ require_once '../database.php';
             </div>
             
             <div class="summary-card">
-                <div class="value" style="color: var(--success);"><?php echo $resolvedTickets; ?></div>
-                <div class="label">Resolved</div>
+                <div class="value" style="color: var(--success);"><?php echo $completedTickets; ?></div>
+                <div class="label">Completed</div>
                 <div class="trend trend-up">
-                    <i class="fas fa-arrow-up"></i> <?php echo $resolutionRate; ?>% resolution rate
+                    <i class="fas fa-check-circle"></i> Resolved + Closed
                 </div>
             </div>
             
             <div class="summary-card">
-                <div class="value" style="color: var(--warning);"><?php echo $pendingTickets; ?></div>
-                <div class="label">Pending</div>
+                <div class="value" style="color: var(--warning);"><?php echo $pendingTickets + $inProgressTickets + $assignedTickets; ?></div>
+                <div class="label">Active</div>
                 <div class="trend trend-down">
-                    <i class="fas fa-clock"></i> Awaiting action
+                    <i class="fas fa-clock"></i> Pending / In Progress
                 </div>
             </div>
             
@@ -158,6 +224,37 @@ require_once '../database.php';
                 <div class="trend">
                     <i class="fas fa-chart-line"></i> Overall performance
                 </div>
+            </div>
+        </div>
+
+        <!-- Solution Statistics Cards -->
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+            <div class="card" style="padding: 20px;">
+                <div style="font-size: 2rem; color: var(--success); margin-bottom: 10px;">
+                    <?php echo $solutionStats['total_solved'] ?? 0; ?>
+                </div>
+                <div style="color: var(--text-secondary);">Total Solved</div>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <div style="font-size: 2rem; color: var(--info); margin-bottom: 10px;">
+                    <?php echo $solutionStats['with_solution'] ?? 0; ?>
+                </div>
+                <div style="color: var(--text-secondary);">With Solution Notes</div>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <div style="font-size: 2rem; color: var(--warning); margin-bottom: 10px;">
+                    <?php echo $solutionStats['without_solution'] ?? 0; ?>
+                </div>
+                <div style="color: var(--text-secondary);">Missing Solution</div>
+            </div>
+            
+            <div class="card" style="padding: 20px;">
+                <div style="font-size: 2rem; color: var(--accent-primary); margin-bottom: 10px;">
+                    <?php echo round($resolutionTimeStats['avg_hours'] ?? 0, 1); ?>h
+                </div>
+                <div style="color: var(--text-secondary);">Avg Resolution Time</div>
             </div>
         </div>
 
@@ -207,8 +304,111 @@ require_once '../database.php';
             </div>
         </div>
 
+        <!-- Common Solutions/Remarks Section -->
+        <?php if (!empty($commonSolutions)): ?>
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <i class="fas fa-lightbulb"></i> Most Common Solutions & Remarks
+            </div>
+            <div class="table-container">
+                <table id="solutionsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 70%">Solution / Remark</th>
+                            <th style="width: 30%">Frequency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($commonSolutions as $solution): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars(substr($solution['solution'], 0, 100)) . (strlen($solution['solution']) > 100 ? '...' : ''); ?></td>
+                            <td>
+                                <span class="badge badge-info"><?php echo $solution['frequency']; ?> times</span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Resolved Tickets Details -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <i class="fas fa-check-circle"></i> Resolved & Closed Tickets Details
+            </div>
+            <div class="table-container">
+                <table id="resolvedTicketsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Company</th>
+                            <th>Concern</th>
+                            <th>Solution / Remarks</th>
+                            <th>Resolved Date</th>
+                            <th>Resolution Time</th>
+                            <th>Technician</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $stmt = $pdo->prepare("
+                            SELECT 
+                                t.ticket_id,
+                                c.company_name,
+                                t.concern_description,
+                                t.solution,
+                                t.finish_date,
+                                t.date_requested,
+                                CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
+                                TIMESTAMPDIFF(HOUR, t.date_requested, t.finish_date) as hours_to_resolve
+                            FROM tickets t
+                            LEFT JOIN clients c ON t.company_id = c.client_id
+                            LEFT JOIN technical_staff ts ON t.technical_id = ts.technical_id
+                            WHERE t.status IN ('Resolved', 'Closed')
+                            AND DATE(t.date_requested) BETWEEN ? AND ?
+                            ORDER BY t.finish_date DESC
+                            LIMIT 50
+                        ");
+                        $stmt->execute([$dateFrom, $dateTo]);
+                        $resolvedDetails = $stmt->fetchAll();
+                        
+                        foreach ($resolvedDetails as $ticket):
+                            $hours = $ticket['hours_to_resolve'];
+                            if ($hours < 24) {
+                                $timeDisplay = $hours . ' hours';
+                            } else {
+                                $days = floor($hours / 24);
+                                $remainingHours = $hours % 24;
+                                $timeDisplay = $days . ' days ' . ($remainingHours > 0 ? $remainingHours . ' hours' : '');
+                            }
+                        ?>
+                        <tr>
+                            <td>#<?php echo $ticket['ticket_id']; ?></td>
+                            <td><?php echo htmlspecialchars($ticket['company_name']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($ticket['concern_description'], 0, 50)) . '...'; ?></td>
+                            <td>
+                                <?php if ($ticket['solution']): ?>
+                                    <span class="tooltip-trigger" style="cursor: help;" title="<?php echo htmlspecialchars($ticket['solution']); ?>">
+                                        <?php echo htmlspecialchars(substr($ticket['solution'], 0, 50)) . (strlen($ticket['solution']) > 50 ? '...' : ''); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge badge-warning">No solution recorded</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo date('M d, Y H:i', strtotime($ticket['finish_date'])); ?></td>
+                            <td><?php echo $timeDisplay; ?></td>
+                            <td><?php echo $ticket['tech_name'] ?? 'Unassigned'; ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Additional Stats -->
-        <div class="card">
+        <div class="card" style="margin-top: 20px;">
             <div class="card-header">
                 <i class="fas fa-chart-simple"></i> Detailed Statistics
             </div>
@@ -293,6 +493,33 @@ require_once '../database.php';
                                 </div>
                             </td>
                         </tr>
+                        <tr>
+                            <td>Tickets with Solutions</td>
+                            <td><?php echo $solutionStats['with_solution'] ?? 0; ?></td>
+                            <td>
+                                <div class="progress-bar" style="width: 200px;">
+                                    <div class="progress" style="width: <?php echo ($completedTickets > 0 && isset($solutionStats['with_solution'])) ? ($solutionStats['with_solution'] / $completedTickets * 100) : 0; ?>%; background: var(--info);">
+                                        <?php echo ($completedTickets > 0 && isset($solutionStats['with_solution'])) ? round(($solutionStats['with_solution'] / $completedTickets * 100), 1) : 0; ?>%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Average Solution Length</td>
+                            <td colspan="2"><?php echo isset($solutionStats['avg_solution_length']) ? round($solutionStats['avg_solution_length']) : 0; ?> characters</td>
+                        </tr>
+                        <tr>
+                            <td>Average Resolution Time</td>
+                            <td colspan="2"><?php echo isset($resolutionTimeStats['avg_hours']) ? round($resolutionTimeStats['avg_hours'], 1) : 0; ?> hours</td>
+                        </tr>
+                        <tr>
+                            <td>Fastest Resolution</td>
+                            <td colspan="2"><?php echo isset($resolutionTimeStats['min_hours']) ? round($resolutionTimeStats['min_hours'], 1) : 0; ?> hours</td>
+                        </tr>
+                        <tr>
+                            <td>Slowest Resolution</td>
+                            <td colspan="2"><?php echo isset($resolutionTimeStats['max_hours']) ? round($resolutionTimeStats['max_hours'], 1) : 0; ?> hours</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -366,15 +593,9 @@ require_once '../database.php';
     document.addEventListener('DOMContentLoaded', function() {
         // Status Chart Data
         <?php
-        $statusStats = [];
         $statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Closed'];
         $statusColors = ['#ff7675', '#74b9ff', '#fdcb6e', '#00b894', '#6c5ce7'];
-        
-        foreach($statuses as $status) {
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM tickets WHERE status = ? AND DATE(date_requested) BETWEEN ? AND ?");
-            $stmt->execute([$status, $dateFrom, $dateTo]);
-            $statusStats[] = $stmt->fetch()['count'];
-        }
+        $statusStats = [$pendingTickets, $assignedTickets, $inProgressTickets, $resolvedTickets, $closedTickets];
         ?>
 
         // Status Chart
@@ -598,8 +819,18 @@ require_once '../database.php';
             ['SUMMARY STATISTICS', ''],
             ['Total Tickets', '<?php echo $totalTickets; ?>'],
             ['Resolved Tickets', '<?php echo $resolvedTickets; ?>'],
+            ['Closed Tickets', '<?php echo $closedTickets; ?>'],
+            ['Completed Tickets (Resolved+Closed)', '<?php echo $completedTickets; ?>'],
             ['Pending Tickets', '<?php echo $pendingTickets; ?>'],
+            ['In Progress Tickets', '<?php echo $inProgressTickets; ?>'],
+            ['Assigned Tickets', '<?php echo $assignedTickets; ?>'],
             ['Resolution Rate', '<?php echo $resolutionRate; ?>%'],
+            ['', ''],
+            ['SOLUTION STATISTICS', ''],
+            ['Total Solved Tickets', '<?php echo $solutionStats['total_solved'] ?? 0; ?>'],
+            ['With Solution Notes', '<?php echo $solutionStats['with_solution'] ?? 0; ?>'],
+            ['Missing Solution', '<?php echo $solutionStats['without_solution'] ?? 0; ?>'],
+            ['Avg Resolution Time', '<?php echo isset($resolutionTimeStats['avg_hours']) ? round($resolutionTimeStats['avg_hours'], 1) : 0; ?> hours'],
             ['', ''],
             ['PRIORITY BREAKDOWN', ''],
             ['Low Priority', '<?php echo $priorityStats['Low']; ?>'],
@@ -634,9 +865,51 @@ require_once '../database.php';
         }
         ?>
         
+        // Add common solutions
+        <?php if (!empty($commonSolutions)): ?>
+        data.push(['', '']);
+        data.push(['MOST COMMON SOLUTIONS', '']);
+        <?php
+        foreach($commonSolutions as $solution) {
+            echo "data.push(['" . addslashes(substr($solution['solution'], 0, 50)) . "...', '{$solution['frequency']} times']);\n";
+        }
+        ?>
+        <?php endif; ?>
+        
+        // Add resolved tickets details
+        data.push(['', '']);
+        data.push(['RESOLVED TICKETS DETAILS', '']);
+        data.push(['Ticket #', 'Company', 'Solution', 'Resolved Date', 'Resolution Time', 'Technician']);
+        
+        <?php foreach ($resolvedDetails as $ticket): 
+            $hours = $ticket['hours_to_resolve'];
+            if ($hours < 24) {
+                $timeDisplay = $hours . ' hours';
+            } else {
+                $days = floor($hours / 24);
+                $remainingHours = $hours % 24;
+                $timeDisplay = $days . ' days ' . ($remainingHours > 0 ? $remainingHours . ' hours' : '');
+            }
+        ?>
+        data.push([
+            '#<?php echo $ticket['ticket_id']; ?>',
+            '<?php echo addslashes($ticket['company_name']); ?>',
+            '<?php echo addslashes(substr($ticket['solution'] ?? 'No solution', 0, 100)); ?>',
+            '<?php echo date('Y-m-d H:i', strtotime($ticket['finish_date'])); ?>',
+            '<?php echo $timeDisplay; ?>',
+            '<?php echo addslashes($ticket['tech_name'] ?? 'Unassigned'); ?>'
+        ]);
+        <?php endforeach; ?>
+        
         // Create worksheet
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 30 },
+            { wch: 30 }
+        ];
         
         // Add worksheet to workbook
         XLSX.utils.book_append_sheet(wb, ws, 'Ticket Report');
@@ -666,5 +939,43 @@ require_once '../database.php';
         }, 3000);
     }
     </script>
+
+    <style>
+    .tooltip-trigger {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted var(--text-secondary);
+    }
+    
+    .tooltip-trigger:hover {
+        color: var(--accent-primary);
+    }
+    
+    /* Add hover effect for solution rows */
+    #resolvedTicketsTable tbody tr:hover td:first-child {
+        color: var(--accent-primary);
+        font-weight: 600;
+    }
+    
+    #resolvedTicketsTable td {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    #resolvedTicketsTable td:nth-child(4) {
+        max-width: 400px;
+    }
+    
+    /* Badge styles */
+    .badge-info {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+    }
+    </style>
 </body>
 </html>

@@ -1572,7 +1572,7 @@ function handleFileSelect(input) {
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        // Updated processImport function with better empty row handling
+       
 // Updated processImport function
 function processImport() {
     if (!importData || importData.length < 2) {
