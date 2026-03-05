@@ -287,6 +287,108 @@ if (isset($_GET['client_id'])) {
             color: white;
             border-color: var(--accent-primary);
         }
+
+        /* Import Modal Styles */
+        .import-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .import-option {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .import-option:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
+        }
+        
+        .import-option i {
+            font-size: 2.5rem;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+        
+        .import-option p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .file-info {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-info i {
+            color: var(--success);
+            font-size: 1.5rem;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--gradient-2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .import-log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .log-entry.success {
+            color: var(--success);
+        }
+        
+        .log-entry.error {
+            color: var(--danger);
+        }
+        
+        .log-entry.warning {
+            color: var(--warning);
+        }
+        
+        .log-entry i {
+            width: 20px;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +417,10 @@ if (isset($_GET['client_id'])) {
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search tickets...">
                 </div>
+                <!-- IMPORT BUTTON - NEW -->
+                <button class="btn btn-info" onclick="openImportModal()" style="margin-right: 10px; background: var(--info);">
+                    <i class="fas fa-file-import"></i> Import
+                </button>
                 <button class="btn btn-success" onclick="exportToExcel()" style="background: var(--gradient-2); margin-right: 10px;">
                     <i class="fas fa-file-excel"></i> Excel
                 </button>
@@ -662,6 +768,81 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
+    <!-- IMPORT MODAL - NEW -->
+    <div class="modal" id="importModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-import" style="color: var(--info);"></i> Import Tickets from Excel</h2>
+                <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+            </div>
+            
+            <div class="import-options">
+                <div class="import-option" onclick="downloadTemplate()">
+                    <i class="fas fa-download"></i>
+                    <h3>Download Template</h3>
+                    <p>Get Excel template with correct format</p>
+                </div>
+                <div class="import-option" onclick="document.getElementById('excelFileInput').click()">
+                    <i class="fas fa-upload"></i>
+                    <h3>Upload File</h3>
+                    <p>Select Excel file to import</p>
+                </div>
+            </div>
+            
+            <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display: none;" onchange="handleFileSelect(this)">
+            
+            <div id="fileInfo" class="file-info" style="display: none;">
+                <i class="fas fa-file-excel"></i>
+                <div>
+                    <strong id="fileName"></strong><br>
+                    <small id="fileSize"></small>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="clearSelectedFile()" style="margin-left: auto;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="progress-bar-container" id="progressBarContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div id="importOptions" style="display: none;">
+    <div class="form-group">
+        <label class="form-label">
+            <i class="fas fa-exclamation-triangle"></i> Duplicate Handling
+        </label>
+        <select class="form-control" id="duplicateHandling">
+            <option value="skip">Skip duplicates (recommended)</option>
+            <option value="update">Update existing tickets</option>
+            <option value="create">Create new even if duplicate</option>
+        </select>
+    </div>
+    
+    <!-- NEW: Skip empty rows option -->
+    <div class="form-group" style="margin-top: 10px;">
+        <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="skipEmptyRows" checked style="width: 16px; height: 16px;"> 
+            <span><i class="fas fa-trash-alt"></i> Skip completely empty rows</span>
+        </label>
+        <small style="color: var(--text-muted); display: block; margin-left: 24px;">
+            When checked, rows with all empty fields will be ignored. Uncheck to import even empty rows (will use defaults).
+        </small>
+    </div>
+    
+    <div class="flex justify-between" style="margin-top: 20px;">
+        <button class="btn btn-danger" onclick="closeModal('importModal')">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-success" onclick="processImport()" id="importButton">
+            <i class="fas fa-cloud-upload-alt"></i> Start Import
+        </button>
+    </div>
+</div>
+            
+            <div id="importLog" class="import-log" style="display: none;"></div>
+        </div>
+    </div>
+
     <!-- Loading Spinner -->
     <div id="loadingSpinner" class="modal" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); display: none;">
         <div class="spinner"></div>
@@ -673,6 +854,11 @@ if (isset($_GET['client_id'])) {
         let pendingTicketId = null;
         let pendingTechId = null;
         let currentTechName = '';
+        
+        // Import State
+        let selectedFile = null;
+        let importData = null;
+        let importLog = [];
 
         // Utility Functions
         function formatDate(date) {
@@ -1203,6 +1389,347 @@ if (isset($_GET['client_id'])) {
             a.click();
         }
 
+        // IMPORT FUNCTIONS - NEW
+        function openImportModal() {
+            clearImportState();
+            openModal('importModal');
+        }
+
+        function downloadTemplate() {
+    // Go up one level to access files in the root directory
+    window.location.href = '../download-template.php?type=tickets';
+    addLogEntry('Excel template download started - please wait...', 'info');
+    
+    // Small delay to show the message
+    setTimeout(() => {
+        addLogEntry('Template download should start automatically', 'success');
+    }, 1000);
+}
+
+        // Updated handleFileSelect function
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    selectedFile = file;
+    
+    // Display file info
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('fileInfo').style.display = 'flex';
+    
+    // Clear previous logs
+    importLog = [];
+    document.getElementById('importLog').innerHTML = '';
+    document.getElementById('importLog').style.display = 'none';
+    
+    // Show import options
+    document.getElementById('importOptions').style.display = 'block';
+    
+    addLogEntry(`Loading file: ${file.name} (${formatFileSize(file.size)})`, 'info');
+    
+    // Read and parse file
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            // Get the data
+            const data = e.target.result;
+            
+            // Parse based on file type
+            let workbook;
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                // Parse CSV
+                const lines = data.split('\n');
+                const csvData = lines.map(line => line.split(','));
+                workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.aoa_to_sheet(csvData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+            } else {
+                // Parse Excel file
+                const arrayBuffer = e.target.result;
+                workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            }
+            
+            // Get first sheet
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Convert to JSON with header option
+            importData = XLSX.utils.sheet_to_json(worksheet, { 
+                header: 1,
+                defval: '', // Default value for empty cells
+                blankrows: true // Include blank rows
+            });
+            
+            console.log('Raw import data:', importData); // Debug log
+            
+            // Validate and process data
+            if (!importData || importData.length === 0) {
+                addLogEntry('File contains no data', 'error');
+                return;
+            }
+            
+            // Check if file has headers
+            if (importData.length < 1) {
+                addLogEntry('File is empty', 'error');
+                return;
+            }
+            
+            // Get headers (first row)
+            const headers = importData[0] || [];
+            addLogEntry(`Found ${importData.length} rows in file`, 'info');
+            addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
+            
+            // Count rows with data (excluding header)
+            let dataRows = 0;
+            for (let i = 1; i < importData.length; i++) {
+                const row = importData[i];
+                if (row && row.some(cell => cell && cell.toString().trim() !== '')) {
+                    dataRows++;
+                }
+            }
+            
+            addLogEntry(`${dataRows} rows contain data (excluding header)`, 'success');
+            
+            // Show preview of first data row
+            if (importData.length > 1) {
+                const firstDataRow = importData[1];
+                addLogEntry('Sample first data row:', 'info');
+                for (let j = 0; j < Math.min(headers.length, firstDataRow.length); j++) {
+                    if (firstDataRow[j] && firstDataRow[j].toString().trim() !== '') {
+                        addLogEntry(`  ${headers[j]}: ${firstDataRow[j]}`, 'info');
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error parsing file:', error);
+            addLogEntry('Error parsing file: ' + error.message, 'error');
+            addLogEntry('Make sure the file is a valid Excel or CSV file', 'warning');
+        }
+    };
+    
+    reader.onerror = function(error) {
+        console.error('FileReader error:', error);
+        addLogEntry('Error reading file: ' + error, 'error');
+    };
+    
+    // Read as array buffer for Excel files, as text for CSV
+    if (file.name.toLowerCase().endsWith('.csv')) {
+        reader.readAsText(file);
+    } else {
+        reader.readAsArrayBuffer(file);
+    }
+}
+        function clearSelectedFile() {
+            document.getElementById('excelFileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('importOptions').style.display = 'none';
+            document.getElementById('importLog').style.display = 'none';
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('importLog').innerHTML = '';
+            selectedFile = null;
+            importData = null;
+            importLog = [];
+        }
+
+        function clearImportState() {
+            clearSelectedFile();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function addLogEntry(message, type) {
+            importLog.push({ message, type, time: new Date() });
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('importLog');
+            logDiv.style.display = 'block';
+            
+            let html = '';
+            importLog.forEach(entry => {
+                const icon = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                }[entry.type] || 'fa-info-circle';
+                
+                html += `<div class="log-entry ${entry.type}">
+                    <i class="fas ${icon}"></i>
+                    <span>[${entry.time.toLocaleTimeString()}] ${entry.message}</span>
+                </div>`;
+            });
+            
+            logDiv.innerHTML = html;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Updated processImport function with better empty row handling
+// Updated processImport function
+function processImport() {
+    if (!importData || importData.length < 2) {
+        addLogEntry('No data to import - please select a valid file with data', 'error');
+        return;
+    }
+    
+    const duplicateHandling = document.getElementById('duplicateHandling').value;
+    const skipEmptyRows = document.getElementById('skipEmptyRows').checked;
+    
+    // Show progress bar
+    document.getElementById('progressBarContainer').style.display = 'block';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('importButton').disabled = true;
+    
+    addLogEntry('', 'info');
+    addLogEntry('='.repeat(50), 'info');
+    addLogEntry(`STARTING IMPORT PROCESS`, 'info');
+    addLogEntry('='.repeat(50), 'info');
+    
+    // Get headers (first row)
+    const headers = importData[0] || [];
+    addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
+    
+    // Prepare data for import
+    const records = [];
+    let emptyRowCount = 0;
+    
+    for (let i = 1; i < importData.length; i++) {
+        const row = importData[i];
+        
+        if (!row || row.length === 0) {
+            emptyRowCount++;
+            continue;
+        }
+        
+        // Map columns based on header position
+        const record = {
+    ticket_id: row[0] ? row[0].toString().trim() : '',
+    company: row[1] ? row[1].toString().trim() : '',
+    contact: row[2] ? row[2].toString().trim() : '',
+    contact_number: row[3] ? row[3].toString().trim() : '', // NEW: Contact Number
+    concern: row[4] ? row[4].toString().trim() : '',        // Concern moved to column 4
+    priority: row[5] ? row[5].toString().trim() : '',       // Priority at column 5
+    status: row[6] ? row[6].toString().trim() : '',         // Status at column 6
+    assigned_to: row[7] ? row[7].toString().trim() : '',    // Assigned To at column 7
+    date: row[8] ? row[8].toString().trim() : ''            // Date at column 8
+};
+        
+        // Check if row has data
+        const hasData = record.company || record.contact || record.concern;
+        
+        if (hasData) {
+            records.push(record);
+            addLogEntry(`Row ${i + 1}: Found data - ${record.company || 'Empty'}`, 'info');
+        } else {
+            emptyRowCount++;
+        }
+    }
+    
+    addLogEntry(`Total rows with data: ${records.length}`, 'info');
+    addLogEntry(`Empty rows skipped: ${emptyRowCount}`, 'info');
+    
+    if (records.length === 0) {
+        addLogEntry('❌ No data rows to import', 'error');
+        document.getElementById('importButton').disabled = false;
+        document.getElementById('progressBarContainer').style.display = 'none';
+        return;
+    }
+    
+    addLogEntry('📤 Sending data to server...', 'info');
+    
+    // IMPORTANT: Use the correct path
+    // If tickets.php is in /pages/ folder, use '../import-tickets.php'
+    // If tickets.php is in root folder, use 'import-tickets.php'
+    
+    const importUrl = '../import-tickets.php'; // Change this based on your structure
+    
+    fetch(importUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            records: records,
+            duplicate_handling: duplicateHandling,
+            skip_empty_rows: skipEmptyRows
+        })
+    })
+    .then(async response => {
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Failed to parse JSON:', text);
+            throw new Error('Server returned invalid JSON. Check PHP errors.');
+        }
+    })
+    .then(data => {
+        document.getElementById('progressBar').style.width = '100%';
+        
+        if (data.success) {
+            addLogEntry('✅ Import completed successfully!', 'success');
+            addLogEntry(`📊 Imported: ${data.imported}`, 'success');
+            addLogEntry(`⚠️ Skipped: ${data.skipped}`, 'warning');
+            addLogEntry(`❌ Errors: ${data.errors}`, data.errors > 0 ? 'error' : 'info');
+            
+            if (data.details) {
+                data.details.forEach(detail => {
+                    addLogEntry(detail.message, detail.type);
+                });
+            }
+            
+            showNotification(`Import completed: ${data.imported} tickets added`, 'success');
+            
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            addLogEntry('❌ Import failed: ' + data.message, 'error');
+            showNotification('Import failed', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        addLogEntry('❌ Error: ' + error.message, 'error');
+        addLogEntry('Check browser console for details', 'warning');
+        showNotification('Error during import', 'danger');
+    })
+    .finally(() => {
+        document.getElementById('importButton').disabled = false;
+        document.getElementById('progressBarContainer').style.display = 'none';
+    });
+    
+    // Simulate progress
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 10;
+        document.getElementById('progressBar').style.width = progress + '%';
+        if (progress >= 90) clearInterval(interval);
+    }, 200);
+}
+
+// Add this to your import modal HTML in tickets.php
+// Add this option in the import options div:
+/*
+<div class="form-group" style="margin-top: 10px;">
+    <label class="form-label">
+        <input type="checkbox" id="skipEmptyRows" checked> 
+        Skip completely empty rows
+    </label>
+    <small style="color: var(--text-muted); display: block;">
+        When checked, rows with all empty fields will be ignored
+    </small>
+</div>
+*/
+
         // Modal Functions
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -1253,7 +1780,7 @@ if (isset($_GET['client_id'])) {
 
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const modals = ['viewTicketModal', 'editTicketModal', 'assignModal', 'reassignModal', 'statusModal', 'deleteModal'];
+            const modals = ['viewTicketModal', 'editTicketModal', 'assignModal', 'reassignModal', 'statusModal', 'deleteModal', 'importModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -1270,6 +1797,7 @@ if (isset($_GET['client_id'])) {
                 filterTickets(filterParam);
             }
         });
+       
     </script>
 </body>
 </html>
