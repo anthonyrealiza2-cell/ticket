@@ -10,7 +10,7 @@ if (!isset($_GET['tech_id'])) {
 $tech_id = $_GET['tech_id'];
 
 try {
-    // Get technician info
+    // Get technician info (including active status)
     $techStmt = $pdo->prepare("SELECT * FROM technical_staff WHERE technical_id = ?");
     $techStmt->execute([$tech_id]);
     $technician = $techStmt->fetch(PDO::FETCH_ASSOC);
@@ -25,7 +25,7 @@ try {
     $perfStmt->execute([$tech_id]);
     $performance = $perfStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Get tickets
+    // Get tickets (only show tickets for active technicians or always show for profile view)
     $ticketStmt = $pdo->prepare("
         SELECT 
             t.ticket_id,

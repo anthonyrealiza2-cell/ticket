@@ -49,21 +49,43 @@ require_once '../database.php';
         <!-- Performance Overview Cards -->
         <div class="technical-stats-grid">
             <?php
-            // Get total staff
+            // Get total staff (all staff)
             $stmt = $pdo->query("SELECT COUNT(*) as total FROM technical_staff");
             $totalStaff = $stmt->fetch()['total'];
+            
+            // Get active staff count
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM technical_staff WHERE is_active = 1");
+            $activeStaff = $stmt->fetch()['total'];
             
             // Get total resolved tickets from view
             $stmt = $pdo->query("SELECT SUM(resolve) as total FROM vw_tech_performance");
             $totalResolved = $stmt->fetch()['total'] ?? 0;
             
-            // Get average performance from view
-            $stmt = $pdo->query("SELECT AVG(performance_rate) as avg_perf FROM vw_tech_performance WHERE total_ticket > 0");
-            $avgPerf = round($stmt->fetch()['avg_perf'] ?? 0, 1);
+            // Get total assigned tickets from view
+            $stmt = $pdo->query("SELECT SUM(total_ticket) as total FROM vw_tech_performance");
+            $totalAssigned = $stmt->fetch()['total'] ?? 0;
             
-            // Get top performer from view
-            $stmt = $pdo->query("SELECT full_name as name FROM vw_tech_performance WHERE total_ticket > 0 ORDER BY performance_rate DESC LIMIT 1");
+            // Get top performer based on MOST RESOLVED TICKETS (highest resolve count)
+            $stmt = $pdo->query("
+                SELECT v.full_name as name, v.total_ticket, v.resolve
+                FROM vw_tech_performance v
+                JOIN technical_staff ts ON v.technical_id = ts.technical_id
+                WHERE ts.is_active = 1 
+                ORDER BY v.resolve DESC 
+                LIMIT 1
+            ");
             $topPerformer = $stmt->fetch();
+            
+            // Get second place for comparison
+            $stmt = $pdo->query("
+                SELECT v.full_name as name, v.resolve
+                FROM vw_tech_performance v
+                JOIN technical_staff ts ON v.technical_id = ts.technical_id
+                WHERE ts.is_active = 1 
+                ORDER BY v.resolve DESC 
+                LIMIT 1, 1
+            ");
+            $secondPlace = $stmt->fetch();
             ?>
             
             <div class="technical-stat-card">
@@ -75,6 +97,22 @@ require_once '../database.php';
             </div>
             
             <div class="technical-stat-card">
+                <div class="technical-stat-icon"><i class="fas fa-user-check"></i></div>
+                <div class="technical-stat-info">
+                    <h3>Active Staff</h3>
+                    <div class="technical-stat-number"><?php echo $activeStaff; ?></div>
+                </div>
+            </div>
+            
+            <div class="technical-stat-card">
+                <div class="technical-stat-icon"><i class="fas fa-ticket-alt"></i></div>
+                <div class="technical-stat-info">
+                    <h3>Total Assigned</h3>
+                    <div class="technical-stat-number"><?php echo $totalAssigned; ?></div>
+                </div>
+            </div>
+            
+            <div class="technical-stat-card">
                 <div class="technical-stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="technical-stat-info">
                     <h3>Total Resolved</h3>
@@ -82,19 +120,18 @@ require_once '../database.php';
                 </div>
             </div>
             
-            <div class="technical-stat-card">
-                <div class="technical-stat-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="technical-stat-info">
-                    <h3>Avg Performance</h3>
-                    <div class="technical-stat-number"><?php echo $avgPerf; ?>%</div>
-                </div>
-            </div>
-            
-            <div class="technical-stat-card">
+            <div class="technical-stat-card <?php echo $topPerformer ? 'top-performer' : ''; ?>">
                 <div class="technical-stat-icon"><i class="fas fa-crown"></i></div>
                 <div class="technical-stat-info">
                     <h3>Top Performer</h3>
                     <div class="technical-stat-number"><?php echo $topPerformer['name'] ?? 'N/A'; ?></div>
+                    <?php if ($topPerformer): ?>
+                        <div class="stat-detail">
+                            <i class="fas fa-check-circle"></i> <?php echo $topPerformer['resolve']; ?> resolved
+                            <?php if ($secondPlace): ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -105,7 +142,7 @@ require_once '../database.php';
             <div class="tech-sidebar">
                 <div class="tech-sidebar-header">
                     <h2><i class="fas fa-users-cog"></i> Technical Staff</h2>
-                    <p><i class="fas fa-user-check"></i> <?php echo $totalStaff; ?> active members</p>
+                    <p><i class="fas fa-user-check"></i> <?php echo $activeStaff; ?> active / <?php echo $totalStaff; ?> total</p>
                 </div>
                 
                 <div class="tech-list" id="techList">
@@ -115,27 +152,36 @@ require_once '../database.php';
                                v.total_ticket, 
                                v.resolve, 
                                v.pending, 
-                               v.performance_rate,
                                COALESCE(v.total_ticket, 0) as ticket_count
                         FROM technical_staff ts
                         LEFT JOIN vw_tech_performance v ON ts.technical_id = v.technical_id
-                        ORDER BY v.performance_rate DESC
+                        ORDER BY ts.is_active DESC, v.resolve DESC
                     ");
                     
                     $firstTech = null;
                     while($tech = $techStmt->fetch()) {
                         if (!$firstTech) $firstTech = $tech;
+                        $isActive = $tech['is_active'] ?? 1;
+                        $ticketCount = $tech['ticket_count'] ?? 0;
+                        $resolved = $tech['resolve'] ?? 0;
                         ?>
-                        <div class="tech-item" onclick="selectTech(<?php echo $tech['technical_id']; ?>, this)" data-tech-id="<?php echo $tech['technical_id']; ?>">
+                        <div class="tech-item <?php echo $isActive ? '' : 'inactive'; ?>" 
+                             onclick="selectTech(<?php echo $tech['technical_id']; ?>, this)" 
+                             data-tech-id="<?php echo $tech['technical_id']; ?>">
                             <div class="tech-item-left">
-                                <div class="tech-avatar">
+                                <div class="tech-avatar" style="<?php echo !$isActive ? 'opacity: 0.6;' : ''; ?>">
                                     <?php echo strtoupper(substr($tech['firstname'], 0, 1) . substr($tech['lastname'], 0, 1)); ?>
                                 </div>
                                 <div class="tech-info">
-                                    <h4><?php echo htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname']); ?></h4>
+                                    <h4>
+                                        <?php echo htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname']); ?>
+                                        <?php if (!$isActive): ?>
+                                            <span class="inactive-badge">(Inactive)</span>
+                                        <?php endif; ?>
+                                    </h4>
                                     <p>
-                                        <i class="fas fa-ticket-alt"></i> <?php echo $tech['ticket_count']; ?> tickets
-                                    </p>
+                                        <i class="fas fa-ticket-alt"></i> <?php echo $ticketCount; ?> assigned | 
+
                                 </div>
                             </div>
                             <button class="view-details-btn" onclick="event.stopPropagation(); viewTech(<?php echo $tech['technical_id']; ?>)">
@@ -156,7 +202,6 @@ require_once '../database.php';
                         SELECT 
                             t.ticket_id,
                             t.concern_description,
-                            t.priority,
                             t.status,
                             t.date_requested,
                             c.company_name,
@@ -174,17 +219,33 @@ require_once '../database.php';
                     $tickets = $ticketStmt->fetchAll();
                     
                     // Get performance data
-                    $perfStmt = $pdo->prepare("SELECT * FROM vw_tech_performance WHERE technical_id = ?");
+                    $perfStmt = $pdo->prepare("SELECT total_ticket, resolve, pending FROM vw_tech_performance WHERE technical_id = ?");
                     $perfStmt->execute([$firstTech['technical_id']]);
                     $perf = $perfStmt->fetch();
+                    
+                    $isActive = $firstTech['is_active'] ?? 1;
+                    $totalTickets = $perf['total_ticket'] ?? 0;
+                    $resolved = $perf['resolve'] ?? 0;
+                    $pending = $perf['pending'] ?? 0;
                 ?>
                 <div class="tech-main-header">
-                    <h2>
-                        <i class="fas fa-user-circle"></i> 
-                        <?php echo htmlspecialchars($firstTech['firstname'] . ' ' . $firstTech['lastname']); ?>
-                    </h2>
-                    <div class="tech-main-stats">
-                        <span class="badge badge-info">Performance: <?php echo round($perf['performance_rate'] ?? 0, 1); ?>%</span>
+                    <div class="tech-title-section">
+                        <h2>
+                            <i class="fas fa-user-circle"></i> 
+                            <?php echo htmlspecialchars($firstTech['firstname'] . ' ' . $firstTech['lastname']); ?>
+                        </h2>
+                        <span class="status-badge <?php echo $isActive ? 'active' : 'inactive'; ?>">
+                            <?php echo $isActive ? 'Active' : 'Inactive'; ?>
+                        </span>
+                    </div>
+                    <div class="status-toggle-container">
+                        <span class="toggle-label">Status:</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="techStatusToggle" 
+                                   <?php echo $isActive ? 'checked' : ''; ?> 
+                                   onchange="toggleTechnicianStatus(<?php echo $firstTech['technical_id']; ?>, this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
 
@@ -192,60 +253,66 @@ require_once '../database.php';
                 <div class="company-stats">
                     <div class="company-stat-card">
                         <div class="value"><?php echo count($tickets); ?></div>
-                        <div class="label">Total Companies</div>
+                        <div class="label">Active Companies</div>
                     </div>
                     <div class="company-stat-card">
-                        <div class="value"><?php echo $perf['resolve'] ?? 0; ?></div>
+                        <div class="value"><?php echo $resolved; ?></div>
                         <div class="label">Resolved</div>
                     </div>
                     <div class="company-stat-card">
-                        <div class="value"><?php echo $perf['pending'] ?? 0; ?></div>
-                        <div class="label">Active</div>
+                        <div class="value"><?php echo $pending; ?></div>
+                        <div class="label">Active Tickets</div>
                     </div>
                 </div>
 
-                <!-- Company List -->
-                <div class="company-list" id="companyList">
-                    <?php if (count($tickets) > 0): ?>
-                        <?php foreach ($tickets as $ticket): ?>
-                        <div class="company-item">
-                            <div class="company-name">
-                                <?php echo htmlspecialchars($ticket['company_name']); ?>
+                <!-- Scrollable Company List Container -->
+                <div class="company-list-container">
+                    <div class="company-list" id="companyList">
+                        <h3><i class="fas fa-building"></i> Assigned Companies/Tickets</h3>
+                        <?php if (count($tickets) > 0): ?>
+                            <?php foreach ($tickets as $ticket): ?>
+                            <div class="company-item">
+                                <div class="company-name">
+                                    <?php echo htmlspecialchars($ticket['company_name']); ?>
+                                    <small>Ticket #<?php echo $ticket['ticket_id']; ?></small>
+                                </div>
+                                <div class="person-in-charge">
+                                    <?php echo htmlspecialchars($ticket['contact_person']); ?>
+                                </div>
+                                <div class="contact-status">
+                                    <span class="status-dot <?php echo $ticket['status'] == 'Resolved' ? 'offline' : ''; ?>"></span>
+                                    <span><?php echo $ticket['contact_number'] ?? 'No contact'; ?></span>
+                                </div>
+                                <div class="objectives">
+                                    <i class="fas fa-tasks"></i>
+                                    <?php 
+                                    $objective = $ticket['concern_type'] ?? 'General Support';
+                                    if (strpos($objective, 'Install') !== false) {
+                                        echo 'Installation';
+                                    } elseif (strpos($objective, 'Train') !== false) {
+                                        echo 'Training';
+                                    } elseif (strpos($objective, 'Support') !== false) {
+                                        echo 'Support';
+                                    } else {
+                                        echo $objective;
+                                    }
+                                    ?>
+                                    <?php if ($ticket['status'] == 'In Progress'): ?>
+                                        <span class="status-badge-ticket warning">Active</span>
+                                    <?php elseif ($ticket['status'] == 'Resolved' || $ticket['status'] == 'Closed'): ?>
+                                        <span class="status-badge-ticket success">Done</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            <div class="person-in-charge">
-                                <?php echo htmlspecialchars($ticket['contact_person']); ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="fas fa-building"></i>
+                                <h3>No Assigned Companies</h3>
+                                <p>This technician currently has no tickets assigned.</p>
                             </div>
-                            <div class="contact-status">
-                                <span class="status-dot <?php echo $ticket['status'] == 'Resolved' ? 'offline' : ''; ?>"></span>
-                                <span><?php echo $ticket['contact_number'] ?? 'No contact'; ?></span>
-                            </div>
-                            <div class="objectives">
-                                <i class="fas fa-tasks"></i>
-                                <?php 
-                                $objective = $ticket['concern_type'] ?? 'General Support';
-                                if (strpos($objective, 'Install') !== false) {
-                                    echo 'Installation';
-                                } elseif (strpos($objective, 'Train') !== false) {
-                                    echo 'Training';
-                                } elseif (strpos($objective, 'Support') !== false) {
-                                    echo 'Support';
-                                } else {
-                                    echo $objective;
-                                }
-                                ?>
-                                <?php if ($ticket['status'] == 'In Progress'): ?>
-                                    <span class="badge badge-warning" style="margin-left: 8px;">Active</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <i class="fas fa-building"></i>
-                            <h3>No Assigned Companies</h3>
-                            <p>This technician currently has no tickets assigned.</p>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Add Company Button -->
@@ -532,34 +599,51 @@ require_once '../database.php';
 
     function updateMainContent(data) {
         const mainContent = document.getElementById('techMainContent');
+        const isActive = data.technician.is_active ?? 1;
+        const totalTickets = data.performance.total_ticket || 0;
+        const resolved = data.performance.resolve || 0;
+        const pending = data.performance.pending || 0;
         
         let html = `
             <div class="tech-main-header">
-                <h2>
-                    <i class="fas fa-user-circle"></i> 
-                    ${data.technician.firstname} ${data.technician.lastname}
-                </h2>
-                <div class="tech-main-stats">
-                    <span class="badge badge-info">Performance: ${data.performance.performance_rate || 0}%</span>
+                <div class="tech-title-section">
+                    <h2>
+                        <i class="fas fa-user-circle"></i> 
+                        ${escapeHtml(data.technician.firstname)} ${escapeHtml(data.technician.lastname)}
+                    </h2>
+                    <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                        ${isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+                <div class="status-toggle-container">
+                    <span class="toggle-label">Status:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="techStatusToggle" 
+                               ${isActive ? 'checked' : ''} 
+                               onchange="toggleTechnicianStatus(${data.technician.technical_id}, this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
 
             <div class="company-stats">
                 <div class="company-stat-card">
                     <div class="value">${data.tickets.length}</div>
-                    <div class="label">Total Companies</div>
+                    <div class="label">Active Companies</div>
                 </div>
                 <div class="company-stat-card">
-                    <div class="value">${data.performance.resolve || 0}</div>
+                    <div class="value">${resolved}</div>
                     <div class="label">Resolved</div>
                 </div>
                 <div class="company-stat-card">
-                    <div class="value">${data.performance.pending || 0}</div>
-                    <div class="label">Active</div>
+                    <div class="value">${pending}</div>
+                    <div class="label">Active Tickets</div>
                 </div>
             </div>
 
-            <div class="company-list" id="companyList">
+            <div class="company-list-container">
+                <div class="company-list" id="companyList">
+                    <h3><i class="fas fa-building"></i> Assigned Companies/Tickets</h3>
         `;
         
         if (data.tickets.length > 0) {
@@ -568,6 +652,7 @@ require_once '../database.php';
                     <div class="company-item">
                         <div class="company-name">
                             ${escapeHtml(ticket.company_name)}
+                            <small>Ticket #${ticket.ticket_id}</small>
                         </div>
                         <div class="person-in-charge">
                             ${escapeHtml(ticket.contact_person)}
@@ -579,7 +664,8 @@ require_once '../database.php';
                         <div class="objectives">
                             <i class="fas fa-tasks"></i>
                             ${getObjectiveText(ticket.concern_type)}
-                            ${ticket.status == 'In Progress' ? '<span class="badge badge-warning" style="margin-left: 8px;">Active</span>' : ''}
+                            ${ticket.status == 'In Progress' ? '<span class="status-badge-ticket warning">Active</span>' : ''}
+                            ${ticket.status == 'Resolved' || ticket.status == 'Closed' ? '<span class="status-badge-ticket success">Done</span>' : ''}
                         </div>
                     </div>
                 `;
@@ -595,6 +681,7 @@ require_once '../database.php';
         }
         
         html += `
+                </div>
             </div>
             <div class="add-company-btn" onclick="openAddTicketModal(${data.technician.technical_id})">
                 <i class="fas fa-plus-circle"></i>
@@ -605,7 +692,131 @@ require_once '../database.php';
         mainContent.innerHTML = html;
     }
 
+    // Toggle technician status
+    function toggleTechnicianStatus(techId, isActive) {
+        showLoading();
+        
+        fetch('../update-technician-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                technical_id: techId,
+                is_active: isActive
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showNotification(`Technician ${isActive ? 'activated' : 'deactivated'} successfully`, 'success');
+                
+                // Update the tech item in the sidebar
+                const techItem = document.querySelector(`.tech-item[data-tech-id="${techId}"]`);
+                if (techItem) {
+                    if (isActive) {
+                        techItem.classList.remove('inactive');
+                        const inactiveBadge = techItem.querySelector('.inactive-badge');
+                        if (inactiveBadge) inactiveBadge.remove();
+                        techItem.querySelector('.tech-avatar').style.opacity = '1';
+                    } else {
+                        techItem.classList.add('inactive');
+                        const nameElement = techItem.querySelector('h4');
+                        if (nameElement && !nameElement.querySelector('.inactive-badge')) {
+                            nameElement.innerHTML += ' <span class="inactive-badge">(Inactive)</span>';
+                        }
+                        techItem.querySelector('.tech-avatar').style.opacity = '0.6';
+                    }
+                }
+                
+                // Update the status badge in main content
+                const statusBadge = document.querySelector('.tech-main-header .status-badge');
+                if (statusBadge) {
+                    statusBadge.className = `status-badge ${isActive ? 'active' : 'inactive'}`;
+                    statusBadge.textContent = isActive ? 'Active' : 'Inactive';
+                }
+            } else {
+                showNotification('Error updating status: ' + data.message, 'danger');
+                // Revert toggle if there was an error
+                const toggle = document.getElementById('techStatusToggle');
+                if (toggle) toggle.checked = !isActive;
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showNotification('Error updating technician status', 'danger');
+            // Revert toggle if there was an error
+            const toggle = document.getElementById('techStatusToggle');
+            if (toggle) toggle.checked = !isActive;
+        });
+    }
+
+    // View technical staff details
+    function viewTech(id) {
+        showLoading();
+        
+        Promise.all([
+            fetch(`../get-technical.php?id=${id}`).then(res => res.json()),
+            fetch(`../get-tech-performance.php?id=${id}`).then(res => res.json())
+        ])
+        .then(([techData, perfData]) => {
+            hideLoading();
+            
+            if (techData.error) {
+                showNotification(techData.error, 'danger');
+                return;
+            }
+            
+            const totalTickets = perfData.total_ticket || 0;
+            const resolved = perfData.resolve || 0;
+            const pending = perfData.pending || 0;
+            const isActive = techData.is_active ?? 1;
+            
+            document.getElementById('techDetails').innerHTML = `
+                <div style="display: grid; gap: 15px;">
+                    <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${techData.technical_id}</p>
+                    <p><strong><i class="fas fa-user"></i> Name:</strong> ${escapeHtml(techData.firstname)} ${escapeHtml(techData.lastname)}</p>
+                    <p><strong><i class="fas fa-toggle-on"></i> Status:</strong> 
+                        <span class="status-badge ${isActive ? 'active' : 'inactive'}" style="display: inline-block; margin-left: 5px; padding: 4px 8px;">
+                            ${isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </p>
+                    <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${escapeHtml(techData.email)}</p>
+                    <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${escapeHtml(techData.contact_viber)}</p>
+                    <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${escapeHtml(techData.branch)}</p>
+                    <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${escapeHtml(techData.position)}</p>
+                    
+                    <div style="background: var(--gradient-1); padding: 15px; border-radius: 12px; color: white; margin: 10px 0;">
+                        <h4 style="margin-bottom: 10px;">Ticket Summary</h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700;">${totalTickets}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.8;">Total Assigned</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #ffd700;">${resolved}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.8;">Resolved</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700;">${pending}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.8;">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            openModal('viewTechModal');
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showNotification('Error fetching technician details', 'danger');
+        });
+    }
+
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -647,57 +858,6 @@ require_once '../database.php';
 
     function openModal(modalId) {
         document.getElementById(modalId).style.display = 'flex';
-    }
-
-    // View technical staff details
-    function viewTech(id) {
-        fetch(`../get-technical.php?id=${id}`)
-            .then(response => response.json())
-            .then(data => {
-                const details = document.getElementById('techDetails');
-                
-                // Get performance from view
-                fetch(`../get-tech-performance.php?id=${id}`)
-                    .then(perfResponse => perfResponse.json())
-                    .then(perf => {
-                        const performance = perf.performance_rate || 0;
-                        const pending = perf.pending || 0;
-                        
-                        details.innerHTML = `
-                            <div style="display: grid; gap: 15px;">
-                                <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
-                                <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
-                                <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
-                                <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
-                                <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
-                                <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
-                                <p><strong><i class="fas fa-ticket-alt"></i> Total Tickets:</strong> ${perf.total_ticket || 0}</p>
-                                <p><strong><i class="fas fa-check-circle"></i> Resolved:</strong> ${perf.resolve || 0}</p>
-                                <p><strong><i class="fas fa-clock"></i> Pending:</strong> ${pending}</p>
-                                <p><strong><i class="fas fa-chart-line"></i> Performance:</strong> 
-                                    <div class='progress-bar' style='width: 100%; margin-top: 5px;'>
-                                        <div class='progress' style='width: ${performance}%;'>${performance}%</div>
-                                    </div>
-                                </p>
-                            </div>
-                        `;
-                        
-                        openModal('viewTechModal');
-                    })
-                    .catch(() => {
-                        details.innerHTML = `
-                            <div style="display: grid; gap: 15px;">
-                                <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
-                                <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
-                                <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
-                                <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
-                                <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
-                                <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
-                            </div>
-                        `;
-                        openModal('viewTechModal');
-                    });
-            });
     }
 
     // Edit technical staff
@@ -834,19 +994,21 @@ require_once '../database.php';
     function exportToExcel() {
         // Get current technician's data
         const companies = document.querySelectorAll('.company-item');
-        const data = [['Company', 'Person In-Charge', 'Contact', 'Objectives']];
+        const data = [['Company', 'Person In-Charge', 'Contact', 'Objectives', 'Status']];
         
         companies.forEach(company => {
             const row = [];
-            const name = company.querySelector('.company-name')?.innerText || '';
+            const name = company.querySelector('.company-name')?.innerText?.split('\n')[0] || '';
             const person = company.querySelector('.person-in-charge')?.innerText || '';
             const contact = company.querySelector('.contact-status span:last-child')?.innerText || '';
-            const objective = company.querySelector('.objectives')?.innerText.replace('Active', '').trim() || '';
+            const objective = company.querySelector('.objectives')?.innerText.replace(/Active|Done/g, '').trim() || '';
+            const status = company.querySelector('.status-badge-ticket')?.innerText || '';
             
             row.push(name);
             row.push(person);
             row.push(contact);
             row.push(objective);
+            row.push(status);
             data.push(row);
         });
         

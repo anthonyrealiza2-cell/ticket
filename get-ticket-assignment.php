@@ -11,14 +11,15 @@ if (!isset($_GET['id'])) {
 $ticketId = $_GET['id'];
 
 try {
-    // Get assignment information using the normalized structure
+    // Get assignment information
     $stmt = $pdo->prepare("
         SELECT 
             t.technical_id,
             CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
             t.assigned_date,
             DATE_FORMAT(t.assigned_date, '%M %d, %Y %h:%i %p') as formatted_date,
-            t.status
+            t.status,
+            ts.is_active
         FROM tickets t
         LEFT JOIN technical_staff ts ON t.technical_id = ts.technical_id
         WHERE t.ticket_id = ?
@@ -33,7 +34,8 @@ try {
             'tech_name' => $result['tech_name'],
             'assigned_date' => $result['formatted_date'] ?? 'Unknown date',
             'technical_id' => $result['technical_id'],
-            'status' => $result['status']
+            'status' => $result['status'],
+            'is_active' => $result['is_active'] ?? 1
         ]);
     } else {
         echo json_encode(['has_tech' => false]);

@@ -345,67 +345,79 @@ if (isset($_GET['client_id'])) {
     </div>
 
     <!-- Assign Technical Modal (Single) -->
-    <div class="modal" id="assignModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Assign Technical Staff</h2>
-                <button class="modal-close" onclick="closeModal('assignModal')">&times;</button>
-            </div>
-            <form id="assignForm" onsubmit="assignTechnical(event)">
-                <input type="hidden" id="assignTicketId">
-                <div class="form-group">
-                    <label class="form-label">Select Technical Staff</label>
-                    <select class="form-control" id="technicalId" required>
-                        <option value="">Choose staff...</option>
-                        <?php
-                        $techs = $pdo->query("SELECT * FROM technical_staff ORDER BY firstname");
-                        while ($tech = $techs->fetch()):
-                        ?>
-                            <option value="<?= $tech['technical_id'] ?>">
-                                <?= htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname'] . ' - ' . $tech['position']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="flex justify-between">
-                    <button type="button" class="btn btn-danger" onclick="closeModal('assignModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </div>
-            </form>
+    <!-- Assign Technical Modal (Single) -->
+<div class="modal" id="assignModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Assign Technical Staff</h2>
+            <button class="modal-close" onclick="closeModal('assignModal')">&times;</button>
         </div>
+        <form id="assignForm" onsubmit="assignTechnical(event)">
+            <input type="hidden" id="assignTicketId">
+            <div class="form-group">
+                <label class="form-label">Select Technical Staff</label>
+                <select class="form-control" id="technicalId" required>
+                    <option value="">Choose staff...</option>
+                    <?php
+                    // Only show active technicians
+                    $techs = $pdo->query("SELECT * FROM technical_staff WHERE is_active = 1 ORDER BY firstname");
+                    while ($tech = $techs->fetch()):
+                    ?>
+                        <option value="<?= $tech['technical_id'] ?>">
+                            <?= htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname'] . ' - ' . $tech['position']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <small class="field-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Only active technicians are shown
+                </small>
+            </div>
+            <div class="flex justify-between">
+                <button type="button" class="btn btn-danger" onclick="closeModal('assignModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Assign</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Bulk Assign Modal -->
-    <div class="modal" id="bulkAssignModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-plus" style="color: var(--success);"></i> Bulk Assign Tickets</h2>
-                <button class="modal-close" onclick="closeModal('bulkAssignModal')">&times;</button>
-            </div>
-            <div class="bulk-info" id="bulkAssignInfo"></div>
-            <form id="bulkAssignForm" onsubmit="bulkAssign(event)">
-                <input type="hidden" id="bulkAssignIds">
-                <div class="form-group">
-                    <label class="form-label">Select Technical Staff</label>
-                    <select class="form-control" id="bulkTechnicalId" required>
-                        <option value="">Choose staff...</option>
-                        <?php
-                        $techs = $pdo->query("SELECT * FROM technical_staff ORDER BY firstname");
-                        while ($tech = $techs->fetch()):
-                        ?>
-                            <option value="<?= $tech['technical_id'] ?>">
-                                <?= htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname'] . ' - ' . $tech['position']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="flex justify-between">
-                    <button type="button" class="btn btn-danger" onclick="closeModal('bulkAssignModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign Selected</button>
-                </div>
-            </form>
+    <!-- Bulk Assign Modal -->
+<div class="modal" id="bulkAssignModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus" style="color: var(--success);"></i> Bulk Assign Tickets</h2>
+            <button class="modal-close" onclick="closeModal('bulkAssignModal')">&times;</button>
         </div>
+        <div class="bulk-info" id="bulkAssignInfo"></div>
+        <form id="bulkAssignForm" onsubmit="bulkAssign(event)">
+            <input type="hidden" id="bulkAssignIds">
+            <div class="form-group">
+                <label class="form-label">Select Technical Staff</label>
+                <select class="form-control" id="bulkTechnicalId" required>
+                    <option value="">Choose staff...</option>
+                    <?php
+                    // Only show active technicians
+                    $techs = $pdo->query("SELECT * FROM technical_staff WHERE is_active = 1 ORDER BY firstname");
+                    while ($tech = $techs->fetch()):
+                    ?>
+                        <option value="<?= $tech['technical_id'] ?>">
+                            <?= htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname'] . ' - ' . $tech['position']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <small class="field-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Only active technicians are shown
+                </small>
+            </div>
+            <div class="flex justify-between">
+                <button type="button" class="btn btn-danger" onclick="closeModal('bulkAssignModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Assign Selected</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Bulk Status Modal -->
     <div class="modal" id="bulkStatusModal">
