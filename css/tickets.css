@@ -108,6 +108,107 @@ tr:hover td {
   color: var(--text-primary);
 }
 
+/* ========== ACTION DROPDOWN MENU STYLES ========== */
+.actions-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.actions-menu-btn {
+  background: var(--bg-hover);
+  border: none;
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actions-menu-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.actions-menu-btn i {
+  font-size: 1.2rem;
+}
+
+.actions-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 0;
+  min-width: 180px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: none;
+  animation: slideDown 0.2s ease;
+}
+
+.actions-dropdown.show {
+  display: block;
+}
+
+.actions-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.actions-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.actions-dropdown-item i {
+  width: 18px;
+  font-size: 1rem;
+}
+
+.actions-dropdown-item.view i {
+  color: var(--info);
+}
+.actions-dropdown-item.assign i {
+  color: var(--success);
+}
+.actions-dropdown-item.edit i {
+  color: var(--warning);
+}
+.actions-dropdown-item.delete i {
+  color: var(--danger);
+}
+
+.actions-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 8px 0;
+}
+
+/* Disabled state for resolved tickets */
+tr[data-status="Resolved"] .actions-dropdown-item.assign,
+tr[data-status="Closed"] .actions-dropdown-item.assign {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Button Styles - All variants */
 .btn {
   padding: 12px 24px;
@@ -140,11 +241,18 @@ tr:hover td {
   transition:
     width 0.6s,
     height 0.6s;
+  z-index: 0;
 }
 
 .btn:hover::before {
   width: 300px;
   height: 300px;
+}
+
+.btn i,
+.btn span {
+  position: relative;
+  z-index: 1;
 }
 
 .btn:hover {
@@ -159,14 +267,26 @@ tr:hover td {
   box-shadow: var(--shadow-glow);
 }
 
+.btn-primary:hover {
+  box-shadow: 0 10px 25px var(--accent-glow);
+}
+
 .btn-success {
   background: var(--gradient-2);
   color: white;
 }
 
+.btn-success:hover {
+  background: linear-gradient(145deg, #00a884, #00b8b4);
+}
+
 .btn-danger {
   background: var(--gradient-3);
   color: white;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
 }
 
 .btn-info {
@@ -176,11 +296,17 @@ tr:hover td {
 
 .btn-info:hover {
   background: #5fa3e0;
+  box-shadow: 0 10px 25px rgba(116, 185, 255, 0.3);
 }
 
 .btn-warning {
   background: var(--warning);
   color: #2d2d2d;
+}
+
+.btn-warning:hover {
+  background: #f5c542;
+  box-shadow: 0 10px 25px rgba(253, 203, 110, 0.3);
 }
 
 /* Small button variant */
@@ -258,6 +384,14 @@ td .btn-sm {
   background: var(--accent-primary);
   color: white;
   border-color: var(--accent-primary);
+}
+
+/* Filter tabs container */
+.filter-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Ticket Details in Modal */
@@ -464,6 +598,7 @@ td .btn-sm {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: var(--shadow-glow);
+  background: var(--bg-hover);
 }
 
 select.form-control {
@@ -614,7 +749,6 @@ tr[data-status="Closed"] td:first-child {
 #reassignDetails i {
   margin-right: 8px;
 }
-/* Add these styles to your existing tickets.css file */
 
 /* Import Modal Styles */
 .import-options {
@@ -746,34 +880,207 @@ tr[data-status="Closed"] td:first-child {
   box-shadow: 0 10px 25px rgba(92, 149, 235, 0.3);
 }
 
-/* Responsive for import modal */
-@media (max-width: 768px) {
-  .import-options {
-    flex-direction: column;
-    gap: 15px;
-  }
+/* ========== BULK ACTIONS STYLES ========== */
+.bulk-actions-container {
+  position: relative;
+  display: inline-block;
+}
 
-  .import-option {
-    padding: 15px;
-  }
+.bulk-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 0;
+  min-width: 280px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1001;
+  display: none;
+  margin-top: 5px;
+}
 
-  .import-option i {
-    font-size: 2rem;
-  }
+.bulk-dropdown.show {
+  display: block;
+  animation: slideDown 0.2s ease;
+}
 
-  .import-option h3 {
-    font-size: 1rem;
-  }
+.bulk-dropdown-header {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-  .import-option p {
-    font-size: 0.8rem;
-  }
+.bulk-dropdown-header span {
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+}
 
-  .import-log {
-    max-height: 200px;
-    font-size: 0.8rem;
+.bulk-dropdown-header .btn-sm {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+.bulk-dropdown-item {
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.bulk-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.bulk-dropdown-item i {
+  width: 20px;
+  font-size: 1.1rem;
+}
+
+.bulk-dropdown-item.delete:hover {
+  background: rgba(255, 118, 117, 0.1);
+  color: var(--danger);
+}
+
+.bulk-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 8px 0;
+}
+
+.bulk-info {
+  background: var(--bg-secondary);
+  border-left: 4px solid var(--info);
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.bulk-info i {
+  color: var(--info);
+  font-size: 1.2rem;
+}
+
+.bulk-info strong {
+  color: var(--accent-primary);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 50%; /* Makes it round */
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background: var(--bg-secondary);
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-glow);
+}
+
+input[type="checkbox"]:checked {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  animation: checkPop 0.2s ease;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:indeterminate {
+  background: var(--warning);
+  border-color: var(--warning);
+  position: relative;
+}
+
+input[type="checkbox"]:indeterminate::after {
+  content: "−";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--border-color);
+}
+
+input[type="checkbox"]:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.ticket-checkbox {
+  margin: 0;
+}
+
+/* Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .stats-grid {
@@ -834,6 +1141,28 @@ tr[data-status="Closed"] td:first-child {
   }
   .modal-actions .btn {
     width: 100%;
+  }
+
+  /* Import modal responsive */
+  .import-options {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .import-option {
+    padding: 15px;
+  }
+  .import-option i {
+    font-size: 2rem;
+  }
+  .import-option h3 {
+    font-size: 1rem;
+  }
+  .import-option p {
+    font-size: 0.8rem;
+  }
+  .import-log {
+    max-height: 200px;
+    font-size: 0.8rem;
   }
 }
 

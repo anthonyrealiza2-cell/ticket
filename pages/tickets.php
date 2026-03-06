@@ -30,366 +30,6 @@ if (isset($_GET['client_id'])) {
     
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <style>
-        /* Actions Menu Styles */
-        .actions-menu-container {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .actions-menu-btn {
-            background: var(--bg-hover);
-            border: none;
-            color: var(--text-secondary);
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .actions-menu-btn:hover {
-            background: var(--accent-primary);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
-        }
-        
-        .actions-menu-btn i {
-            font-size: 1.2rem;
-        }
-        
-        .actions-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px 0;
-            min-width: 180px;
-            box-shadow: var(--shadow-lg);
-            z-index: 1000;
-            display: none;
-            animation: slideDown 0.2s ease;
-        }
-        
-        .actions-dropdown.show {
-            display: block;
-        }
-        
-        .actions-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            color: var(--text-secondary);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-        
-        .actions-dropdown-item:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        
-        .actions-dropdown-item i {
-            width: 18px;
-            font-size: 1rem;
-        }
-        
-        .actions-dropdown-item.view i { color: var(--info); }
-        .actions-dropdown-item.assign i { color: var(--success); }
-        .actions-dropdown-item.edit i { color: var(--warning); }
-        .actions-dropdown-item.delete i { color: var(--danger); }
-        
-        .actions-dropdown-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 8px 0;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Disabled state for resolved tickets */
-        tr[data-status="Resolved"] .actions-dropdown-item.assign,
-        tr[data-status="Closed"] .actions-dropdown-item.assign {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        
-        /* Delete Modal */
-        .delete-warning {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .delete-warning i {
-            font-size: 4rem;
-            color: var(--danger);
-            margin-bottom: 15px;
-        }
-        
-        .delete-warning h3 {
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-        
-        .delete-warning p {
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-        
-        .delete-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-        
-        .btn-delete {
-            background: var(--gradient-3);
-            color: white;
-        }
-        
-        .btn-delete:hover {
-            box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
-        }
-        
-        .btn-cancel {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .btn-cancel:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent-primary);
-        }
-
-        /* Edit Ticket Modal Styles */
-        .edit-ticket-form .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .edit-ticket-form .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .edit-ticket-form .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-        
-        .edit-ticket-form .form-label i {
-            color: var(--accent-primary);
-            margin-right: 8px;
-            width: 18px;
-        }
-        
-        .edit-ticket-form .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-            font-family: "Inter", sans-serif;
-        }
-        
-        .edit-ticket-form .form-control:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: var(--shadow-glow);
-            background: var(--bg-hover);
-        }
-        
-        .edit-ticket-form .form-control::placeholder {
-            color: var(--text-muted);
-            font-style: italic;
-        }
-        
-        .edit-ticket-form select.form-control {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c7293' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 16px;
-            padding-right: 45px;
-        }
-        
-        .edit-ticket-form textarea.form-control {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .current-info {
-            background: var(--bg-secondary);
-            border-left: 4px solid var(--info);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .current-info i {
-            color: var(--info);
-            font-size: 1.2rem;
-        }
-        
-        .current-info span {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        
-        .current-info strong {
-            color: var(--accent-primary);
-        }
-        
-        @media (max-width: 768px) {
-            .edit-ticket-form .form-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-
-        /* Active filter tab */
-        .filter-tab.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        /* Import Modal Styles */
-        .import-options {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-        
-        .import-option {
-            flex: 1;
-            text-align: center;
-            padding: 20px;
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .import-option:hover {
-            border-color: var(--accent-primary);
-            background: var(--bg-hover);
-        }
-        
-        .import-option i {
-            font-size: 2.5rem;
-            color: var(--accent-primary);
-            margin-bottom: 10px;
-        }
-        
-        .import-option p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-        
-        .file-info {
-            background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .file-info i {
-            color: var(--success);
-            font-size: 1.5rem;
-        }
-        
-        .progress-bar-container {
-            width: 100%;
-            height: 8px;
-            background: var(--bg-secondary);
-            border-radius: 4px;
-            margin: 15px 0;
-            overflow: hidden;
-            display: none;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: var(--gradient-2);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        
-        .import-log {
-            max-height: 300px;
-            overflow-y: auto;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-        
-        .log-entry {
-            padding: 5px 0;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .log-entry.success {
-            color: var(--success);
-        }
-        
-        .log-entry.error {
-            color: var(--danger);
-        }
-        
-        .log-entry.warning {
-            color: var(--warning);
-        }
-        
-        .log-entry i {
-            width: 20px;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -410,18 +50,53 @@ if (isset($_GET['client_id'])) {
         </nav>
 
         <!-- Header with Actions -->
-        <div class="flex justify-between" style="margin-bottom: 20px;">
-            <h1 style="color: var(--text-primary);">Ticket Management</h1>
-            <div class="flex">
-                <div class="search-box" style="margin-right: 10px;">
+        <div class="page-header">
+            <h1>Ticket Management</h1>
+            <div class="header-actions">
+                <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search tickets...">
                 </div>
-                <!-- IMPORT BUTTON - NEW -->
-                <button class="btn btn-info" onclick="openImportModal()" style="margin-right: 10px; background: var(--info);">
+                
+                <!-- Bulk Actions Dropdown -->
+                <!-- Bulk Actions Dropdown -->
+<div class="bulk-actions-container" id="bulkActions" style="display: none;">
+    <button class="btn btn-primary" onclick="toggleBulkMenu()">
+        <i class="fas fa-check-double"></i> Action Menu <i class="fas fa-caret-down"></i>
+    </button>
+    <div class="bulk-dropdown" id="bulkDropdown">
+        <div class="bulk-dropdown-header">
+            <span><i class="fas fa-layer-group"></i> Selected: <span id="selectedCount">0</span> tickets</span>
+            <button class="btn-sm btn-info" onclick="selectAll()">Select All</button>
+            <button class="btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
+        </div>
+        <div class="bulk-dropdown-item" onclick="openBulkAssignModal()">
+            <i class="fas fa-user-plus" style="color: var(--success);"></i>
+            <span>Assign to Technician</span>
+        </div>
+        <div class="bulk-dropdown-item" onclick="openBulkStatusModal()">
+            <i class="fas fa-sync-alt" style="color: var(--warning);"></i>
+            <span>Update Status</span>
+        </div>
+        <div class="bulk-dropdown-item" onclick="openBulkPriorityModal()">
+            <i class="fas fa-flag" style="color: var(--info);"></i>
+            <span>Update Priority</span>
+        </div>
+        <div class="bulk-dropdown-divider"></div>
+        <div class="bulk-dropdown-item delete" onclick="openBulkArchiveModal()">
+            <i class="fas fa-archive" style="color: var(--warning);"></i>
+            <span>Archive Selected</span>
+        </div>
+    </div>
+</div>
+
+                <a href="view-archive.php" class="btn btn-info">
+                    <i class="fas fa-archive"></i> View Archive
+                </a>
+                <button class="btn btn-info" onclick="openImportModal()">
                     <i class="fas fa-file-import"></i> Import
                 </button>
-                <button class="btn btn-success" onclick="exportToExcel()" style="background: var(--gradient-2); margin-right: 10px;">
+                <button class="btn btn-success" onclick="exportToExcel()">
                     <i class="fas fa-file-excel"></i> Excel
                 </button>
                 <button class="btn btn-success" onclick="exportTickets()">
@@ -430,11 +105,11 @@ if (isset($_GET['client_id'])) {
             </div>
         </div>
 
-        <!-- Filter Tabs - Added Unassigned -->
-        <div class="flex" style="margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
             <?php
-            $filters = ['all', 'pending', 'assigned', 'in progress', 'resolved', 'unassigned'];
-            $filterLabels = ['All', 'Pending', 'Assigned', 'In Progress', 'Resolved', 'Unassigned'];
+            $filters = ['all', 'pending', 'assigned', 'in progress', 'resolved', 'closed', 'unassigned'];
+            $filterLabels = ['All', 'Pending', 'Assigned', 'In Progress', 'Resolved', 'Closed', 'Unassigned'];
             foreach ($filters as $index => $filter) {
                 $activeClass = (isset($_GET['filter']) && $_GET['filter'] === $filter) || (!isset($_GET['filter']) && $filter === 'all') ? 'active' : '';
                 echo "<button class='filter-tab $activeClass' onclick='filterTickets(\"$filter\")'>{$filterLabels[$index]}</button>";
@@ -448,6 +123,9 @@ if (isset($_GET['client_id'])) {
                 <table id="ticketsTable">
                     <thead>
                         <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)">
+                            </th>
                             <th>ID</th>
                             <th>Company</th>
                             <th>Contact</th>
@@ -482,6 +160,9 @@ if (isset($_GET['client_id'])) {
                                 data-ticket-id="<?= $ticket['ticket_id'] ?>"
                                 data-company-id="<?= $ticket['client_id'] ?>"
                                 data-is-unassigned="<?= $isUnassigned ? 'true' : 'false' ?>">
+                                <td>
+                                    <input type="checkbox" class="ticket-checkbox" value="<?= $ticket['ticket_id'] ?>" onchange="updateBulkActions()">
+                                </td>
                                 <td>#<?= $ticket['ticket_id'] ?></td>
                                 <td><?= htmlspecialchars($ticket['company_name']) ?></td>
                                 <td><?= htmlspecialchars($ticket['contact_person']) ?></td>
@@ -511,8 +192,8 @@ if (isset($_GET['client_id'])) {
                                                 <i class='fas fa-sync-alt'></i> Update Status
                                             </button>
                                             <div class='actions-dropdown-divider'></div>
-                                            <button class='actions-dropdown-item delete' onclick='confirmDelete(<?= $ticket["ticket_id"] ?>)'>
-                                                <i class='fas fa-trash-alt'></i> Delete Ticket
+                                            <button class='actions-dropdown-item delete' onclick='confirmArchive(<?= $ticket["ticket_id"] ?>)'>
+                                                <i class='fas fa-archive'></i> Archive Ticket
                                             </button>
                                         </div>
                                     </div>
@@ -525,7 +206,6 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
-    <!-- Modals -->
     <!-- View Ticket Modal -->
     <div class="modal" id="viewTicketModal">
         <div class="modal-content">
@@ -665,7 +345,7 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
-    <!-- Assign Technical Modal -->
+    <!-- Assign Technical Modal (Single) -->
     <div class="modal" id="assignModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -696,6 +376,147 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
+    <!-- Bulk Assign Modal -->
+    <div class="modal" id="bulkAssignModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus" style="color: var(--success);"></i> Bulk Assign Tickets</h2>
+                <button class="modal-close" onclick="closeModal('bulkAssignModal')">&times;</button>
+            </div>
+            <div class="bulk-info" id="bulkAssignInfo"></div>
+            <form id="bulkAssignForm" onsubmit="bulkAssign(event)">
+                <input type="hidden" id="bulkAssignIds">
+                <div class="form-group">
+                    <label class="form-label">Select Technical Staff</label>
+                    <select class="form-control" id="bulkTechnicalId" required>
+                        <option value="">Choose staff...</option>
+                        <?php
+                        $techs = $pdo->query("SELECT * FROM technical_staff ORDER BY firstname");
+                        while ($tech = $techs->fetch()):
+                        ?>
+                            <option value="<?= $tech['technical_id'] ?>">
+                                <?= htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname'] . ' - ' . $tech['position']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('bulkAssignModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Selected</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Status Modal -->
+    <div class="modal" id="bulkStatusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-sync-alt" style="color: var(--warning);"></i> Bulk Update Status</h2>
+                <button class="modal-close" onclick="closeModal('bulkStatusModal')">&times;</button>
+            </div>
+            <div class="bulk-info" id="bulkStatusInfo"></div>
+            <form id="bulkStatusForm" onsubmit="bulkStatusUpdate(event)">
+                <input type="hidden" id="bulkStatusIds">
+                <div class="form-group">
+                    <label class="form-label">New Status</label>
+                    <select class="form-control" id="bulkNewStatus" required>
+                        <option value="">Select Status...</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Solution / Remarks (Optional)</label>
+                    <textarea class="form-control" id="bulkSolution" rows="3" placeholder="Enter solution or remarks for resolved/closed tickets..."></textarea>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('bulkStatusModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Priority Modal -->
+    <div class="modal" id="bulkPriorityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-flag" style="color: var(--info);"></i> Bulk Update Priority</h2>
+                <button class="modal-close" onclick="closeModal('bulkPriorityModal')">&times;</button>
+            </div>
+            <div class="bulk-info" id="bulkPriorityInfo"></div>
+            <form id="bulkPriorityForm" onsubmit="bulkPriorityUpdate(event)">
+                <input type="hidden" id="bulkPriorityIds">
+                <div class="form-group">
+                    <label class="form-label">New Priority</label>
+                    <select class="form-control" id="bulkNewPriority" required>
+                        <option value="">Select Priority...</option>
+                        <option value="Low">🐢 Low</option>
+                        <option value="Medium">⚡ Medium</option>
+                        <option value="High">🔥 High</option>
+                    </select>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('bulkPriorityModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Priority</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Archive Confirmation Modal -->
+    <!-- Bulk Archive Confirmation Modal -->
+<div class="modal" id="bulkArchiveModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2>Archive Multiple Tickets</h2>
+            <button class="modal-close" onclick="closeModal('bulkArchiveModal')">&times;</button>
+        </div>
+        <div class="delete-warning">
+            <i class="fas fa-archive" style="color: var(--warning);"></i>
+            <h3>Are you sure?</h3>
+            <p id="bulkArchiveMessage">You are about to archive <strong id="bulkArchiveCount">0</strong> tickets. They can be restored from the archive.</p>
+            <div class="form-group" style="margin-top: 15px;">
+                <label class="form-label">Archive Reason (Optional)</label>
+                <textarea class="form-control" id="bulkArchiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+            </div>
+            <input type="hidden" id="bulkArchiveIds">
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="closeModal('bulkArchiveModal')">Cancel</button>
+                <button class="btn btn-warning" onclick="bulkArchive()">Archive All</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Single Archive Confirmation Modal -->
+<div class="modal" id="archiveModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2>Archive Ticket</h2>
+            <button class="modal-close" onclick="closeModal('archiveModal')">&times;</button>
+        </div>
+        <div class="delete-warning">
+            <i class="fas fa-archive" style="color: var(--warning);"></i>
+            <h3>Are you sure?</h3>
+            <p>This ticket will be moved to archive. It can be restored later.</p>
+            <div class="form-group" style="margin-top: 15px;">
+                <label class="form-label">Archive Reason (Optional)</label>
+                <textarea class="form-control" id="archiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+            </div>
+            <input type="hidden" id="archiveTicketId">
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="closeModal('archiveModal')">Cancel</button>
+                <button class="btn btn-warning" onclick="archiveTicket()">Archive</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Reassign Confirmation Modal -->
     <div class="modal" id="reassignModal">
         <div class="modal-content">
@@ -717,7 +538,7 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
-    <!-- Update Status Modal -->
+    <!-- Update Status Modal (Single) -->
     <div class="modal" id="statusModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -748,27 +569,7 @@ if (isset($_GET['client_id'])) {
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2>Delete Ticket</h2>
-                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
-            </div>
-            <div class="delete-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Are you sure?</h3>
-                <p>This action cannot be undone. The ticket will be permanently deleted.</p>
-                <input type="hidden" id="deleteTicketId">
-                <div class="delete-actions">
-                    <button class="btn btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
-                    <button class="btn btn-delete" onclick="deleteTicket()">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- IMPORT MODAL - NEW -->
+    <!-- Import Modal -->
     <div class="modal" id="importModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
@@ -797,7 +598,7 @@ if (isset($_GET['client_id'])) {
                     <strong id="fileName"></strong><br>
                     <small id="fileSize"></small>
                 </div>
-                <button class="btn btn-sm btn-danger" onclick="clearSelectedFile()" style="margin-left: auto;">
+                <button class="btn-sm btn-danger" onclick="clearSelectedFile()" style="margin-left: auto;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -807,37 +608,36 @@ if (isset($_GET['client_id'])) {
             </div>
             
             <div id="importOptions" style="display: none;">
-    <div class="form-group">
-        <label class="form-label">
-            <i class="fas fa-exclamation-triangle"></i> Duplicate Handling
-        </label>
-        <select class="form-control" id="duplicateHandling">
-            <option value="skip">Skip duplicates (recommended)</option>
-            <option value="update">Update existing tickets</option>
-            <option value="create">Create new even if duplicate</option>
-        </select>
-    </div>
-    
-    <!-- NEW: Skip empty rows option -->
-    <div class="form-group" style="margin-top: 10px;">
-        <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" id="skipEmptyRows" checked style="width: 16px; height: 16px;"> 
-            <span><i class="fas fa-trash-alt"></i> Skip completely empty rows</span>
-        </label>
-        <small style="color: var(--text-muted); display: block; margin-left: 24px;">
-            When checked, rows with all empty fields will be ignored. Uncheck to import even empty rows (will use defaults).
-        </small>
-    </div>
-    
-    <div class="flex justify-between" style="margin-top: 20px;">
-        <button class="btn btn-danger" onclick="closeModal('importModal')">
-            <i class="fas fa-times"></i> Cancel
-        </button>
-        <button class="btn btn-success" onclick="processImport()" id="importButton">
-            <i class="fas fa-cloud-upload-alt"></i> Start Import
-        </button>
-    </div>
-</div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-exclamation-triangle"></i> Duplicate Handling
+                    </label>
+                    <select class="form-control" id="duplicateHandling">
+                        <option value="skip">Skip duplicates (recommended)</option>
+                        <option value="update">Update existing tickets</option>
+                        <option value="create">Create new even if duplicate</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-top: 10px;">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="skipEmptyRows" checked style="width: 16px; height: 16px;"> 
+                        <span><i class="fas fa-trash-alt"></i> Skip completely empty rows</span>
+                    </label>
+                    <small style="color: var(--text-muted); display: block; margin-left: 24px;">
+                        When checked, rows with all empty fields will be ignored. Uncheck to import even empty rows (will use defaults).
+                    </small>
+                </div>
+                
+                <div class="flex justify-between" style="margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="closeModal('importModal')">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button class="btn btn-success" onclick="processImport()" id="importButton">
+                        <i class="fas fa-cloud-upload-alt"></i> Start Import
+                    </button>
+                </div>
+            </div>
             
             <div id="importLog" class="import-log" style="display: none;"></div>
         </div>
@@ -860,6 +660,9 @@ if (isset($_GET['client_id'])) {
         let importData = null;
         let importLog = [];
 
+        // Bulk Operations State
+        let selectedTickets = new Set();
+
         // Utility Functions
         function formatDate(date) {
             return date.toISOString().slice(0, 10);
@@ -871,6 +674,9 @@ if (isset($_GET['client_id'])) {
                 document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
                     menu.classList.remove('show');
                 });
+            }
+            if (!event.target.closest('.bulk-actions-container')) {
+                document.getElementById('bulkDropdown')?.classList.remove('show');
             }
         });
 
@@ -887,6 +693,369 @@ if (isset($_GET['client_id'])) {
             }
         }
 
+        function toggleBulkMenu() {
+            document.getElementById('bulkDropdown').classList.toggle('show');
+        }
+
+        // Bulk Operations Functions
+        function updateBulkActions() {
+            const checkboxes = document.querySelectorAll('.ticket-checkbox:checked');
+            selectedTickets.clear();
+            checkboxes.forEach(cb => selectedTickets.add(cb.value));
+            
+            const count = selectedTickets.size;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('bulkActions').style.display = count > 0 ? 'inline-block' : 'none';
+            
+            // Update select all checkbox
+            const allCheckboxes = document.querySelectorAll('.ticket-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+                selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+            }
+        }
+
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.ticket-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            updateBulkActions();
+        }
+
+        function selectAll() {
+            document.getElementById('selectAllCheckbox').checked = true;
+            toggleSelectAll(document.getElementById('selectAllCheckbox'));
+        }
+
+        function clearSelection() {
+            document.getElementById('selectAllCheckbox').checked = false;
+            toggleSelectAll(document.getElementById('selectAllCheckbox'));
+            document.getElementById('bulkDropdown').classList.remove('show');
+        }
+
+        function getSelectedIds() {
+            return Array.from(selectedTickets);
+        }
+
+        // Bulk Assign
+        function openBulkAssignModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            document.getElementById('bulkAssignIds').value = ids.join(',');
+            document.getElementById('bulkAssignInfo').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Assigning <strong>${ids.length}</strong> ticket(s) to technician</span>
+            `;
+            openModal('bulkAssignModal');
+        }
+
+        function bulkAssign(event) {
+            event.preventDefault();
+            
+            const ids = document.getElementById('bulkAssignIds').value.split(',');
+            const techId = document.getElementById('bulkTechnicalId').value;
+            
+            if (!techId) {
+                showNotification('Please select a technician', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            fetch('../bulk-assign-tickets.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticket_ids: ids,
+                    technical_id: techId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification(`Successfully assigned ${data.updated} tickets`, 'success');
+                    closeModal('bulkAssignModal');
+                    clearSelection();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error during bulk assign', 'danger');
+            });
+        }
+
+        // Bulk Status Update
+        function openBulkStatusModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            document.getElementById('bulkStatusIds').value = ids.join(',');
+            document.getElementById('bulkStatusInfo').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Updating status for <strong>${ids.length}</strong> ticket(s)</span>
+            `;
+            openModal('bulkStatusModal');
+        }
+
+        function bulkStatusUpdate(event) {
+            event.preventDefault();
+            
+            const ids = document.getElementById('bulkStatusIds').value.split(',');
+            const status = document.getElementById('bulkNewStatus').value;
+            const solution = document.getElementById('bulkSolution').value;
+            
+            if (!status) {
+                showNotification('Please select a status', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            fetch('../bulk-status-update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticket_ids: ids,
+                    status: status,
+                    solution: solution
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification(`Successfully updated ${data.updated} tickets`, 'success');
+                    closeModal('bulkStatusModal');
+                    clearSelection();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error during bulk status update', 'danger');
+            });
+        }
+
+        // Bulk Priority Update
+        function openBulkPriorityModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            document.getElementById('bulkPriorityIds').value = ids.join(',');
+            document.getElementById('bulkPriorityInfo').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Updating priority for <strong>${ids.length}</strong> ticket(s)</span>
+            `;
+            openModal('bulkPriorityModal');
+        }
+
+        function bulkPriorityUpdate(event) {
+            event.preventDefault();
+            
+            const ids = document.getElementById('bulkPriorityIds').value.split(',');
+            const priority = document.getElementById('bulkNewPriority').value;
+            
+            if (!priority) {
+                showNotification('Please select a priority', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            fetch('../bulk-priority-update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticket_ids: ids,
+                    priority: priority
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification(`Successfully updated ${data.updated} tickets`, 'success');
+                    closeModal('bulkPriorityModal');
+                    clearSelection();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error during bulk priority update', 'danger');
+            });
+        }
+
+        // Bulk Archive
+       // Bulk Archive
+function openBulkArchiveModal() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) {
+        showNotification('No tickets selected', 'warning');
+        return;
+    }
+    
+    // Check if elements exist before setting properties
+    const bulkArchiveIds = document.getElementById('bulkArchiveIds');
+    const bulkArchiveCount = document.getElementById('bulkArchiveCount');
+    const bulkArchiveMessage = document.getElementById('bulkArchiveMessage');
+    
+    if (bulkArchiveIds) bulkArchiveIds.value = ids.join(',');
+    if (bulkArchiveCount) bulkArchiveCount.textContent = ids.length;
+    if (bulkArchiveMessage) {
+        bulkArchiveMessage.innerHTML = `You are about to archive <strong>${ids.length}</strong> tickets. They can be restored from the archive.`;
+    }
+    
+    openModal('bulkArchiveModal');
+}
+
+function bulkArchive() {
+    const bulkArchiveIds = document.getElementById('bulkArchiveIds');
+    const bulkArchiveReason = document.getElementById('bulkArchiveReason');
+    
+    if (!bulkArchiveIds || !bulkArchiveIds.value) {
+        showNotification('No tickets selected', 'warning');
+        return;
+    }
+    
+    const ids = bulkArchiveIds.value.split(',');
+    const reason = bulkArchiveReason ? bulkArchiveReason.value : '';
+    
+    showLoading();
+    
+    fetch('../bulk-archive-tickets.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            ticket_ids: ids,
+            reason: reason,
+            user_id: 1 // Replace with actual user ID from session
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text();
+    })
+    .then(text => {
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Failed to parse JSON:', text);
+            throw new Error('Server returned invalid JSON');
+        }
+    })
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            showNotification(`Successfully archived ${data.archived} tickets`, 'success');
+            closeModal('bulkArchiveModal');
+            clearSelection();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        showNotification('Error during bulk archive: ' + error.message, 'danger');
+    });
+}
+
+        // Single Ticket Archive
+       // Single Ticket Archive
+function confirmArchive(ticketId) {
+    const archiveTicketId = document.getElementById('archiveTicketId');
+    const archiveModal = document.getElementById('archiveModal');
+    
+    if (archiveTicketId) {
+        archiveTicketId.value = ticketId;
+    }
+    
+    if (archiveModal) {
+        openModal('archiveModal');
+    } else {
+        showNotification('Archive modal not found', 'danger');
+    }
+}
+
+function archiveTicket() {
+    const archiveTicketId = document.getElementById('archiveTicketId');
+    const archiveReason = document.getElementById('archiveReason');
+    
+    if (!archiveTicketId || !archiveTicketId.value) {
+        showNotification('No ticket selected', 'warning');
+        return;
+    }
+    
+    const ticketId = archiveTicketId.value;
+    const reason = archiveReason ? archiveReason.value : '';
+    
+    showLoading();
+    
+    fetch('../archive-ticket.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            ticket_id: ticketId,
+            reason: reason,
+            user_id: 1 // Replace with actual user ID from session
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text();
+    })
+    .then(text => {
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Failed to parse JSON:', text);
+            throw new Error('Server returned invalid JSON');
+        }
+    })
+    .then(data => {
+        hideLoading();
+        closeModal('archiveModal');
+        
+        if (data.success) {
+            showNotification('Ticket archived successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        showNotification('Error archiving ticket: ' + error.message, 'danger');
+    });
+}
+
         // Table Functions
         function searchTable() {
             const input = document.getElementById('searchInput');
@@ -898,8 +1067,8 @@ if (isset($_GET['client_id'])) {
                 const cells = rows[i].getElementsByTagName('td');
                 let found = false;
                 
-                for (let j = 0; j < cells.length - 1; j++) {
-                    if (cells[j] && cells[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                for (let j = 1; j < cells.length - 1; j++) {
+                    if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
                         found = true;
                         break;
                     }
@@ -950,11 +1119,9 @@ if (isset($_GET['client_id'])) {
                         return;
                     }
                     
-                    // Get the row to access company_id
                     const row = document.querySelector(`tr[data-ticket-id="${id}"]`);
                     const companyId = row.getAttribute('data-company-id');
                     
-                    // Populate form fields
                     document.getElementById('editTicketId').value = data.ticket_id;
                     document.getElementById('editTicketIdDisplay').textContent = data.ticket_id;
                     document.getElementById('editOriginalCompanyId').value = companyId;
@@ -963,7 +1130,6 @@ if (isset($_GET['client_id'])) {
                     document.getElementById('editContactNumber').value = data.contact_number || '';
                     document.getElementById('editEmail').value = data.email || '';
                     
-                    // Set product
                     const productSelect = document.getElementById('editProduct');
                     const productValue = data.product_name ? `${data.product_name} v${data.version}` : '';
                     if (productValue) {
@@ -975,7 +1141,6 @@ if (isset($_GET['client_id'])) {
                         }
                     }
                     
-                    // Set concern
                     const concernSelect = document.getElementById('editConcern');
                     if (data.concern_type) {
                         for (let option of concernSelect.options) {
@@ -989,7 +1154,6 @@ if (isset($_GET['client_id'])) {
                     document.getElementById('editDescription').value = data.concern_description || '';
                     document.getElementById('editPriority').value = data.priority || 'Medium';
                     
-                    // Format date for datetime-local
                     if (data.date_requested) {
                         const date = new Date(data.date_requested);
                         const year = date.getFullYear();
@@ -1188,7 +1352,6 @@ if (isset($_GET['client_id'])) {
                     const statusClass = (data.status || 'pending').toLowerCase().replace(' ', '');
                     const priorityClass = (data.priority || 'medium').toLowerCase();
                     
-                    // Format contact number to ensure it displays properly
                     const contactNumber = data.contact_number || 'Not provided';
                     const email = data.email || 'Not provided';
                     
@@ -1278,73 +1441,27 @@ if (isset($_GET['client_id'])) {
             });
         }
 
-        // Delete Functions
-        function confirmDelete(ticketId) {
-            document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-            
-            document.getElementById('deleteTicketId').value = ticketId;
-            openModal('deleteModal');
-        }
-
-        function deleteTicket() {
-            const ticketId = document.getElementById('deleteTicketId').value;
-            
-            if (!ticketId) {
-                showNotification('No ticket selected', 'warning');
-                return;
-            }
-            
-            showLoading();
-            
-            fetch('../delete-ticket.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticket_id: ticketId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                closeModal('deleteModal');
-                
-                if (data.success) {
-                    showNotification('Ticket deleted successfully!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showNotification('Error: ' + data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error:', error);
-                showNotification('Error: ' + error.message, 'danger');
-            });
-        }
-
         // Export Functions
         function exportToExcel() {
             const table = document.getElementById('ticketsTable');
             const rows = table.querySelectorAll('tr');
             const data = [];
             
-            // Headers
             const headers = [];
             rows[0].querySelectorAll('th').forEach((th, index) => {
-                if (index < rows[0].querySelectorAll('th').length - 1) {
+                if (index > 0 && index < rows[0].querySelectorAll('th').length - 1) {
                     headers.push(th.innerText);
                 }
             });
             data.push(headers);
             
-            // Rows
             for (let i = 1; i < rows.length; i++) {
                 const row = [];
                 rows[i].querySelectorAll('td').forEach((td, index) => {
-                    if (index < rows[i].querySelectorAll('td').length - 1) {
+                    if (index > 0 && index < rows[i].querySelectorAll('td').length - 1) {
                         let value = td.innerText.trim();
-                        if (index === 0) value = value.replace('#', '');
-                        if (index === 3) value = value.replace('...', '');
+                        if (index === 1) value = value.replace('#', '');
+                        if (index === 4) value = value.replace('...', '');
                         row.push(value);
                     }
                 });
@@ -1373,12 +1490,14 @@ if (isset($_GET['client_id'])) {
             rows.forEach(row => {
                 const rowData = [];
                 row.querySelectorAll('td, th').forEach((cell, index) => {
-                    if (index < row.querySelectorAll('td, th').length - 1) {
+                    if (index > 0 && index < row.querySelectorAll('td, th').length - 1) {
                         let text = cell.innerText.replace(/#/g, '').replace(/"/g, '""');
                         rowData.push('"' + text + '"');
                     }
                 });
-                csv.push(rowData.join(','));
+                if (rowData.length > 0) {
+                    csv.push(rowData.join(','));
+                }
             });
             
             const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
@@ -1389,139 +1508,121 @@ if (isset($_GET['client_id'])) {
             a.click();
         }
 
-        // IMPORT FUNCTIONS - NEW
+        // IMPORT FUNCTIONS
         function openImportModal() {
             clearImportState();
             openModal('importModal');
         }
 
         function downloadTemplate() {
-    // Go up one level to access files in the root directory
-    window.location.href = '../download-template.php?type=tickets';
-    addLogEntry('Excel template download started - please wait...', 'info');
-    
-    // Small delay to show the message
-    setTimeout(() => {
-        addLogEntry('Template download should start automatically', 'success');
-    }, 1000);
-}
-
-        // Updated handleFileSelect function
-function handleFileSelect(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    selectedFile = file;
-    
-    // Display file info
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = formatFileSize(file.size);
-    document.getElementById('fileInfo').style.display = 'flex';
-    
-    // Clear previous logs
-    importLog = [];
-    document.getElementById('importLog').innerHTML = '';
-    document.getElementById('importLog').style.display = 'none';
-    
-    // Show import options
-    document.getElementById('importOptions').style.display = 'block';
-    
-    addLogEntry(`Loading file: ${file.name} (${formatFileSize(file.size)})`, 'info');
-    
-    // Read and parse file
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            // Get the data
-            const data = e.target.result;
+            window.location.href = '../download-template.php?type=tickets';
+            addLogEntry('Excel template download started - please wait...', 'info');
             
-            // Parse based on file type
-            let workbook;
-            if (file.name.toLowerCase().endsWith('.csv')) {
-                // Parse CSV
-                const lines = data.split('\n');
-                const csvData = lines.map(line => line.split(','));
-                workbook = XLSX.utils.book_new();
-                const worksheet = XLSX.utils.aoa_to_sheet(csvData);
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-            } else {
-                // Parse Excel file
-                const arrayBuffer = e.target.result;
-                workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            }
-            
-            // Get first sheet
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Convert to JSON with header option
-            importData = XLSX.utils.sheet_to_json(worksheet, { 
-                header: 1,
-                defval: '', // Default value for empty cells
-                blankrows: true // Include blank rows
-            });
-            
-            console.log('Raw import data:', importData); // Debug log
-            
-            // Validate and process data
-            if (!importData || importData.length === 0) {
-                addLogEntry('File contains no data', 'error');
-                return;
-            }
-            
-            // Check if file has headers
-            if (importData.length < 1) {
-                addLogEntry('File is empty', 'error');
-                return;
-            }
-            
-            // Get headers (first row)
-            const headers = importData[0] || [];
-            addLogEntry(`Found ${importData.length} rows in file`, 'info');
-            addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
-            
-            // Count rows with data (excluding header)
-            let dataRows = 0;
-            for (let i = 1; i < importData.length; i++) {
-                const row = importData[i];
-                if (row && row.some(cell => cell && cell.toString().trim() !== '')) {
-                    dataRows++;
-                }
-            }
-            
-            addLogEntry(`${dataRows} rows contain data (excluding header)`, 'success');
-            
-            // Show preview of first data row
-            if (importData.length > 1) {
-                const firstDataRow = importData[1];
-                addLogEntry('Sample first data row:', 'info');
-                for (let j = 0; j < Math.min(headers.length, firstDataRow.length); j++) {
-                    if (firstDataRow[j] && firstDataRow[j].toString().trim() !== '') {
-                        addLogEntry(`  ${headers[j]}: ${firstDataRow[j]}`, 'info');
-                    }
-                }
-            }
-            
-        } catch (error) {
-            console.error('Error parsing file:', error);
-            addLogEntry('Error parsing file: ' + error.message, 'error');
-            addLogEntry('Make sure the file is a valid Excel or CSV file', 'warning');
+            setTimeout(() => {
+                addLogEntry('Template download should start automatically', 'success');
+            }, 1000);
         }
-    };
-    
-    reader.onerror = function(error) {
-        console.error('FileReader error:', error);
-        addLogEntry('Error reading file: ' + error, 'error');
-    };
-    
-    // Read as array buffer for Excel files, as text for CSV
-    if (file.name.toLowerCase().endsWith('.csv')) {
-        reader.readAsText(file);
-    } else {
-        reader.readAsArrayBuffer(file);
-    }
-}
+
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            selectedFile = file;
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'flex';
+            
+            importLog = [];
+            document.getElementById('importLog').innerHTML = '';
+            document.getElementById('importLog').style.display = 'none';
+            
+            document.getElementById('importOptions').style.display = 'block';
+            
+            addLogEntry(`Loading file: ${file.name} (${formatFileSize(file.size)})`, 'info');
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = e.target.result;
+                    
+                    let workbook;
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        const lines = data.split('\n');
+                        const csvData = lines.map(line => line.split(','));
+                        workbook = XLSX.utils.book_new();
+                        const worksheet = XLSX.utils.aoa_to_sheet(csvData);
+                        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+                    } else {
+                        const arrayBuffer = e.target.result;
+                        workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    }
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    importData = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,
+                        defval: '',
+                        blankrows: true
+                    });
+                    
+                    console.log('Raw import data:', importData);
+                    
+                    if (!importData || importData.length === 0) {
+                        addLogEntry('File contains no data', 'error');
+                        return;
+                    }
+                    
+                    if (importData.length < 1) {
+                        addLogEntry('File is empty', 'error');
+                        return;
+                    }
+                    
+                    const headers = importData[0] || [];
+                    addLogEntry(`Found ${importData.length} rows in file`, 'info');
+                    addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
+                    
+                    let dataRows = 0;
+                    for (let i = 1; i < importData.length; i++) {
+                        const row = importData[i];
+                        if (row && row.some(cell => cell && cell.toString().trim() !== '')) {
+                            dataRows++;
+                        }
+                    }
+                    
+                    addLogEntry(`${dataRows} rows contain data (excluding header)`, 'success');
+                    
+                    if (importData.length > 1) {
+                        const firstDataRow = importData[1];
+                        addLogEntry('Sample first data row:', 'info');
+                        for (let j = 0; j < Math.min(headers.length, firstDataRow.length); j++) {
+                            if (firstDataRow[j] && firstDataRow[j].toString().trim() !== '') {
+                                addLogEntry(`  ${headers[j]}: ${firstDataRow[j]}`, 'info');
+                            }
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error parsing file:', error);
+                    addLogEntry('Error parsing file: ' + error.message, 'error');
+                    addLogEntry('Make sure the file is a valid Excel or CSV file', 'warning');
+                }
+            };
+            
+            reader.onerror = function(error) {
+                console.error('FileReader error:', error);
+                addLogEntry('Error reading file: ' + error, 'error');
+            };
+            
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
         function clearSelectedFile() {
             document.getElementById('excelFileInput').value = '';
             document.getElementById('fileInfo').style.display = 'none';
@@ -1572,163 +1673,137 @@ function handleFileSelect(input) {
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-       
-// Updated processImport function
-function processImport() {
-    if (!importData || importData.length < 2) {
-        addLogEntry('No data to import - please select a valid file with data', 'error');
-        return;
-    }
-    
-    const duplicateHandling = document.getElementById('duplicateHandling').value;
-    const skipEmptyRows = document.getElementById('skipEmptyRows').checked;
-    
-    // Show progress bar
-    document.getElementById('progressBarContainer').style.display = 'block';
-    document.getElementById('progressBar').style.width = '0%';
-    document.getElementById('importButton').disabled = true;
-    
-    addLogEntry('', 'info');
-    addLogEntry('='.repeat(50), 'info');
-    addLogEntry(`STARTING IMPORT PROCESS`, 'info');
-    addLogEntry('='.repeat(50), 'info');
-    
-    // Get headers (first row)
-    const headers = importData[0] || [];
-    addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
-    
-    // Prepare data for import
-    const records = [];
-    let emptyRowCount = 0;
-    
-    for (let i = 1; i < importData.length; i++) {
-        const row = importData[i];
-        
-        if (!row || row.length === 0) {
-            emptyRowCount++;
-            continue;
-        }
-        
-        // Map columns based on header position
-        const record = {
-    ticket_id: row[0] ? row[0].toString().trim() : '',
-    company: row[1] ? row[1].toString().trim() : '',
-    contact: row[2] ? row[2].toString().trim() : '',
-    contact_number: row[3] ? row[3].toString().trim() : '', // NEW: Contact Number
-    concern: row[4] ? row[4].toString().trim() : '',        // Concern moved to column 4
-    priority: row[5] ? row[5].toString().trim() : '',       // Priority at column 5
-    status: row[6] ? row[6].toString().trim() : '',         // Status at column 6
-    assigned_to: row[7] ? row[7].toString().trim() : '',    // Assigned To at column 7
-    date: row[8] ? row[8].toString().trim() : ''            // Date at column 8
-};
-        
-        // Check if row has data
-        const hasData = record.company || record.contact || record.concern;
-        
-        if (hasData) {
-            records.push(record);
-            addLogEntry(`Row ${i + 1}: Found data - ${record.company || 'Empty'}`, 'info');
-        } else {
-            emptyRowCount++;
-        }
-    }
-    
-    addLogEntry(`Total rows with data: ${records.length}`, 'info');
-    addLogEntry(`Empty rows skipped: ${emptyRowCount}`, 'info');
-    
-    if (records.length === 0) {
-        addLogEntry('❌ No data rows to import', 'error');
-        document.getElementById('importButton').disabled = false;
-        document.getElementById('progressBarContainer').style.display = 'none';
-        return;
-    }
-    
-    addLogEntry('📤 Sending data to server...', 'info');
-    
-    // IMPORTANT: Use the correct path
-    // If tickets.php is in /pages/ folder, use '../import-tickets.php'
-    // If tickets.php is in root folder, use 'import-tickets.php'
-    
-    const importUrl = '../import-tickets.php'; // Change this based on your structure
-    
-    fetch(importUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            records: records,
-            duplicate_handling: duplicateHandling,
-            skip_empty_rows: skipEmptyRows
-        })
-    })
-    .then(async response => {
-        const text = await response.text();
-        console.log('Raw response:', text);
-        
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('Failed to parse JSON:', text);
-            throw new Error('Server returned invalid JSON. Check PHP errors.');
-        }
-    })
-    .then(data => {
-        document.getElementById('progressBar').style.width = '100%';
-        
-        if (data.success) {
-            addLogEntry('✅ Import completed successfully!', 'success');
-            addLogEntry(`📊 Imported: ${data.imported}`, 'success');
-            addLogEntry(`⚠️ Skipped: ${data.skipped}`, 'warning');
-            addLogEntry(`❌ Errors: ${data.errors}`, data.errors > 0 ? 'error' : 'info');
-            
-            if (data.details) {
-                data.details.forEach(detail => {
-                    addLogEntry(detail.message, detail.type);
-                });
+        function processImport() {
+            if (!importData || importData.length < 2) {
+                addLogEntry('No data to import - please select a valid file with data', 'error');
+                return;
             }
             
-            showNotification(`Import completed: ${data.imported} tickets added`, 'success');
+            const duplicateHandling = document.getElementById('duplicateHandling').value;
+            const skipEmptyRows = document.getElementById('skipEmptyRows').checked;
             
-            setTimeout(() => location.reload(), 3000);
-        } else {
-            addLogEntry('❌ Import failed: ' + data.message, 'error');
-            showNotification('Import failed', 'danger');
+            document.getElementById('progressBarContainer').style.display = 'block';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('importButton').disabled = true;
+            
+            addLogEntry('', 'info');
+            addLogEntry('='.repeat(50), 'info');
+            addLogEntry(`STARTING IMPORT PROCESS`, 'info');
+            addLogEntry('='.repeat(50), 'info');
+            
+            const headers = importData[0] || [];
+            addLogEntry(`Headers: ${headers.join(' | ')}`, 'info');
+            
+            const records = [];
+            let emptyRowCount = 0;
+            
+            for (let i = 1; i < importData.length; i++) {
+                const row = importData[i];
+                
+                if (!row || row.length === 0) {
+                    emptyRowCount++;
+                    continue;
+                }
+                
+                const record = {
+                    ticket_id: row[0] ? row[0].toString().trim() : '',
+                    company: row[1] ? row[1].toString().trim() : '',
+                    contact: row[2] ? row[2].toString().trim() : '',
+                    contact_number: row[3] ? row[3].toString().trim() : '',
+                    concern: row[4] ? row[4].toString().trim() : '',
+                    priority: row[5] ? row[5].toString().trim() : '',
+                    status: row[6] ? row[6].toString().trim() : '',
+                    assigned_to: row[7] ? row[7].toString().trim() : '',
+                    date: row[8] ? row[8].toString().trim() : ''
+                };
+                
+                const hasData = record.company || record.contact || record.concern;
+                
+                if (hasData) {
+                    records.push(record);
+                    addLogEntry(`Row ${i + 1}: Found data - ${record.company || 'Empty'}`, 'info');
+                } else {
+                    emptyRowCount++;
+                }
+            }
+            
+            addLogEntry(`Total rows with data: ${records.length}`, 'info');
+            addLogEntry(`Empty rows skipped: ${emptyRowCount}`, 'info');
+            
+            if (records.length === 0) {
+                addLogEntry('❌ No data rows to import', 'error');
+                document.getElementById('importButton').disabled = false;
+                document.getElementById('progressBarContainer').style.display = 'none';
+                return;
+            }
+            
+            addLogEntry('📤 Sending data to server...', 'info');
+            
+            const importUrl = '../import-tickets.php';
+            
+            fetch(importUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    records: records,
+                    duplicate_handling: duplicateHandling,
+                    skip_empty_rows: skipEmptyRows
+                })
+            })
+            .then(async response => {
+                const text = await response.text();
+                console.log('Raw response:', text);
+                
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', text);
+                    throw new Error('Server returned invalid JSON. Check PHP errors.');
+                }
+            })
+            .then(data => {
+                document.getElementById('progressBar').style.width = '100%';
+                
+                if (data.success) {
+                    addLogEntry('✅ Import completed successfully!', 'success');
+                    addLogEntry(`📊 Imported: ${data.imported}`, 'success');
+                    addLogEntry(`⚠️ Skipped: ${data.skipped}`, 'warning');
+                    addLogEntry(`❌ Errors: ${data.errors}`, data.errors > 0 ? 'error' : 'info');
+                    
+                    if (data.details) {
+                        data.details.forEach(detail => {
+                            addLogEntry(detail.message, detail.type);
+                        });
+                    }
+                    
+                    showNotification(`Import completed: ${data.imported} tickets added`, 'success');
+                    
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    addLogEntry('❌ Import failed: ' + data.message, 'error');
+                    showNotification('Import failed', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                addLogEntry('❌ Error: ' + error.message, 'error');
+                addLogEntry('Check browser console for details', 'warning');
+                showNotification('Error during import', 'danger');
+            })
+            .finally(() => {
+                document.getElementById('importButton').disabled = false;
+                document.getElementById('progressBarContainer').style.display = 'none';
+            });
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('progressBar').style.width = progress + '%';
+                if (progress >= 90) clearInterval(interval);
+            }, 200);
         }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        addLogEntry('❌ Error: ' + error.message, 'error');
-        addLogEntry('Check browser console for details', 'warning');
-        showNotification('Error during import', 'danger');
-    })
-    .finally(() => {
-        document.getElementById('importButton').disabled = false;
-        document.getElementById('progressBarContainer').style.display = 'none';
-    });
-    
-    // Simulate progress
-    let progress = 0;
-    const interval = setInterval(() => {
-        progress += 10;
-        document.getElementById('progressBar').style.width = progress + '%';
-        if (progress >= 90) clearInterval(interval);
-    }, 200);
-}
-
-// Add this to your import modal HTML in tickets.php
-// Add this option in the import options div:
-/*
-<div class="form-group" style="margin-top: 10px;">
-    <label class="form-label">
-        <input type="checkbox" id="skipEmptyRows" checked> 
-        Skip completely empty rows
-    </label>
-    <small style="color: var(--text-muted); display: block;">
-        When checked, rows with all empty fields will be ignored
-    </small>
-</div>
-*/
 
         // Modal Functions
         function openModal(modalId) {
@@ -1780,7 +1855,11 @@ function processImport() {
 
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const modals = ['viewTicketModal', 'editTicketModal', 'assignModal', 'reassignModal', 'statusModal', 'deleteModal', 'importModal'];
+            const modals = [
+                'viewTicketModal', 'editTicketModal', 'assignModal', 'reassignModal', 
+                'statusModal', 'importModal', 'bulkAssignModal',
+                'bulkStatusModal', 'bulkPriorityModal', 'bulkArchiveModal', 'archiveModal'
+            ];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -1796,8 +1875,9 @@ function processImport() {
             if (filterParam) {
                 filterTickets(filterParam);
             }
+            
+            updateBulkActions();
         });
-       
     </script>
 </body>
 </html>

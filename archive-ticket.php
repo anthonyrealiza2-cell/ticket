@@ -11,7 +11,7 @@ if (!$data || !isset($data['ticket_id'])) {
 
 $ticketId = $data['ticket_id'];
 $userId = $data['user_id'] ?? 1; // Default to admin if not specified
-$reason = $data['reason'] ?? 'Manual archive from tickets page';
+$reason = $data['reason'] ?? 'Manual archive';
 
 try {
     $pdo->beginTransaction();
@@ -39,12 +39,29 @@ try {
     $deleteStmt = $pdo->prepare("DELETE FROM tickets WHERE ticket_id = ?");
     $deleteStmt->execute([$ticketId]);
     
+    // Log the action (if activity_log table exists)
+    try {
+        $logStmt = $pdo->prepare("
+            INSERT INTO activity_log (user_id, action, ticket_id, details, created_at) 
+            VALUES (?, 'ARCHIVE', ?, ?, NOW())
+        ");
+        $logStmt->execute([$userId, $ticketId, "Archived ticket #$ticketId: $reason"]);
+    } catch (Exception $e) {
+        // Activity log table might not exist, ignore error
+    }
+    
     $pdo->commit();
     
-    echo json_encode(['success' => true, 'message' => 'Ticket archived successfully']);
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Ticket archived successfully',
+        'ticket_id' => $ticketId
+    ]);
     
-} catch(PDOException $e) {
-    $pdo->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 ?>

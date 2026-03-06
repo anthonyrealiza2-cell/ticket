@@ -136,6 +136,32 @@ require_once '../database.php';
         ");
         $stmt->execute([$dateFrom, $dateTo]);
         $resolutionTimeStats = $stmt->fetch();
+        
+        // Get all resolved/closed tickets
+        $resolvedStmt = $pdo->prepare("
+            SELECT 
+                t.ticket_id,
+                c.company_name,
+                t.concern_description,
+                t.solution,
+                t.finish_date,
+                t.date_requested,
+                CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
+                TIMESTAMPDIFF(HOUR, t.date_requested, t.finish_date) as hours_to_resolve
+            FROM tickets t
+            LEFT JOIN clients c ON t.company_id = c.client_id
+            LEFT JOIN technical_staff ts ON t.technical_id = ts.technical_id
+            WHERE t.status IN ('Resolved', 'Closed')
+            AND DATE(t.date_requested) BETWEEN ? AND ?
+            ORDER BY t.finish_date DESC
+        ");
+        $resolvedStmt->execute([$dateFrom, $dateTo]);
+        $allResolvedDetails = $resolvedStmt->fetchAll();
+        $totalResolvedCount = count($allResolvedDetails);
+        
+        // Set initial display count
+        $initialDisplayCount = 5;
+        $showMoreCount = 14;
         ?>
 
         <!-- Date Filter -->
@@ -323,7 +349,7 @@ require_once '../database.php';
                         <tr>
                             <td><?php echo htmlspecialchars(substr($solution['solution'], 0, 100)) . (strlen($solution['solution']) > 100 ? '...' : ''); ?></td>
                             <td>
-                                <span class="badge badge-info"><?php echo $solution['frequency']; ?> times</span>
+                                <span class="badge-info"><?php echo $solution['frequency']; ?> times</span>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -333,13 +359,14 @@ require_once '../database.php';
         </div>
         <?php endif; ?>
 
-        <!-- Resolved Tickets Details -->
+        <!-- Resolved Tickets Details with Show More -->
         <div class="card" style="margin-top: 20px;">
             <div class="card-header">
                 <i class="fas fa-check-circle"></i> Resolved & Closed Tickets Details
+                <span class="badge-info" style="margin-left: 10px;">Total: <?php echo $totalResolvedCount; ?> records</span>
             </div>
             <div class="table-container">
-                <table id="resolvedTicketsTable">
+                <table class="resolved-tickets-table" id="resolvedTicketsTable">
                     <thead>
                         <tr>
                             <th>Ticket #</th>
@@ -352,29 +379,11 @@ require_once '../database.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $stmt = $pdo->prepare("
-                            SELECT 
-                                t.ticket_id,
-                                c.company_name,
-                                t.concern_description,
-                                t.solution,
-                                t.finish_date,
-                                t.date_requested,
-                                CONCAT(ts.firstname, ' ', ts.lastname) as tech_name,
-                                TIMESTAMPDIFF(HOUR, t.date_requested, t.finish_date) as hours_to_resolve
-                            FROM tickets t
-                            LEFT JOIN clients c ON t.company_id = c.client_id
-                            LEFT JOIN technical_staff ts ON t.technical_id = ts.technical_id
-                            WHERE t.status IN ('Resolved', 'Closed')
-                            AND DATE(t.date_requested) BETWEEN ? AND ?
-                            ORDER BY t.finish_date DESC
-                            LIMIT 50
-                        ");
-                        $stmt->execute([$dateFrom, $dateTo]);
-                        $resolvedDetails = $stmt->fetchAll();
-                        
-                        foreach ($resolvedDetails as $ticket):
+                        <?php 
+                        $rowCount = 0;
+                        foreach ($allResolvedDetails as $ticket): 
+                            $rowCount++;
+                            $hidden = $rowCount > $initialDisplayCount ? 'hidden-row' : '';
                             $hours = $ticket['hours_to_resolve'];
                             if ($hours < 24) {
                                 $timeDisplay = $hours . ' hours';
@@ -384,17 +393,17 @@ require_once '../database.php';
                                 $timeDisplay = $days . ' days ' . ($remainingHours > 0 ? $remainingHours . ' hours' : '');
                             }
                         ?>
-                        <tr>
+                        <tr class="resolved-row <?php echo $hidden; ?>" data-row-id="<?php echo $rowCount; ?>">
                             <td>#<?php echo $ticket['ticket_id']; ?></td>
                             <td><?php echo htmlspecialchars($ticket['company_name']); ?></td>
                             <td><?php echo htmlspecialchars(substr($ticket['concern_description'], 0, 50)) . '...'; ?></td>
                             <td>
                                 <?php if ($ticket['solution']): ?>
-                                    <span class="tooltip-trigger" style="cursor: help;" title="<?php echo htmlspecialchars($ticket['solution']); ?>">
+                                    <span class="tooltip-trigger" title="<?php echo htmlspecialchars($ticket['solution']); ?>">
                                         <?php echo htmlspecialchars(substr($ticket['solution'], 0, 50)) . (strlen($ticket['solution']) > 50 ? '...' : ''); ?>
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge badge-warning">No solution recorded</span>
+                                    <span class="badge-warning">No solution recorded</span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo date('M d, Y H:i', strtotime($ticket['finish_date'])); ?></td>
@@ -402,6 +411,16 @@ require_once '../database.php';
                             <td><?php echo $ticket['tech_name'] ?? 'Unassigned'; ?></td>
                         </tr>
                         <?php endforeach; ?>
+                        
+                        <?php if ($totalResolvedCount > $initialDisplayCount): ?>
+                        <tr class="show-more-row" id="showMoreRow">
+                            <td colspan="7">
+                                <button class="show-more-btn" onclick="showMoreRecords()" id="showMoreBtn">
+                                    <i class="fas fa-chevron-down"></i> Show <?php echo $showMoreCount; ?> More Records
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -586,6 +605,40 @@ require_once '../database.php';
                 fromDate.value = formatDate(lastMonthStart);
                 toDate.value = formatDate(lastMonthEnd);
                 break;
+        }
+    }
+
+    // Show more records function
+    let currentDisplayCount = <?php echo $initialDisplayCount; ?>;
+    const showMoreCount = <?php echo $showMoreCount; ?>;
+    const totalRecords = <?php echo $totalResolvedCount; ?>;
+
+    function showMoreRecords() {
+        const rows = document.querySelectorAll('.resolved-row');
+        const showMoreBtn = document.getElementById('showMoreBtn');
+        const showMoreRow = document.getElementById('showMoreRow');
+        
+        let newDisplayCount = currentDisplayCount + showMoreCount;
+        if (newDisplayCount > totalRecords) {
+            newDisplayCount = totalRecords;
+        }
+        
+        // Show rows up to newDisplayCount
+        for (let i = currentDisplayCount; i < newDisplayCount; i++) {
+            if (rows[i]) {
+                rows[i].classList.remove('hidden-row');
+            }
+        }
+        
+        currentDisplayCount = newDisplayCount;
+        
+        // Update button text or remove if all records are shown
+        if (currentDisplayCount >= totalRecords) {
+            showMoreRow.remove();
+        } else {
+            const remainingCount = totalRecords - currentDisplayCount;
+            const nextShowCount = Math.min(showMoreCount, remainingCount);
+            showMoreBtn.innerHTML = `<i class="fas fa-chevron-down"></i> Show ${nextShowCount} More Records`;
         }
     }
 
@@ -881,7 +934,7 @@ require_once '../database.php';
         data.push(['RESOLVED TICKETS DETAILS', '']);
         data.push(['Ticket #', 'Company', 'Solution', 'Resolved Date', 'Resolution Time', 'Technician']);
         
-        <?php foreach ($resolvedDetails as $ticket): 
+        <?php foreach ($allResolvedDetails as $ticket): 
             $hours = $ticket['hours_to_resolve'];
             if ($hours < 24) {
                 $timeDisplay = $hours . ' hours';
@@ -939,43 +992,5 @@ require_once '../database.php';
         }, 3000);
     }
     </script>
-
-    <style>
-    .tooltip-trigger {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted var(--text-secondary);
-    }
-    
-    .tooltip-trigger:hover {
-        color: var(--accent-primary);
-    }
-    
-    /* Add hover effect for solution rows */
-    #resolvedTicketsTable tbody tr:hover td:first-child {
-        color: var(--accent-primary);
-        font-weight: 600;
-    }
-    
-    #resolvedTicketsTable td {
-        max-width: 300px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    #resolvedTicketsTable td:nth-child(4) {
-        max-width: 400px;
-    }
-    
-    /* Badge styles */
-    .badge-info {
-        background: rgba(52, 152, 219, 0.2);
-        color: #3498db;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 0.85rem;
-    }
-    </style>
 </body>
 </html>

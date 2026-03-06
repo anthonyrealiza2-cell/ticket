@@ -14,359 +14,6 @@ require_once '../database.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        /* New layout styles */
-        .technical-dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 25px;
-            margin-top: 25px;
-        }
-
-        /* Sidebar Styles */
-        .tech-sidebar {
-            background: var(--bg-card);
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            height: fit-content;
-        }
-
-        .tech-sidebar-header {
-            background: var(--gradient-1);
-            padding: 20px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tech-sidebar-header::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-        }
-
-        .tech-sidebar-header h2 {
-            position: relative;
-            z-index: 1;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .tech-sidebar-header p {
-            position: relative;
-            z-index: 1;
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-
-        .tech-sidebar-header p i {
-            margin-right: 5px;
-        }
-
-        .tech-list {
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .tech-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 12px;
-            margin-bottom: 5px;
-        }
-
-        .tech-item:hover {
-            background: var(--bg-hover);
-            transform: translateX(5px);
-        }
-
-        .tech-item.active {
-            background: var(--bg-hover);
-            border-left: 4px solid var(--accent-primary);
-        }
-
-        .tech-item-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .tech-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: var(--gradient-2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1.2rem;
-        }
-
-        .tech-info h4 {
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            font-size: 1rem;
-        }
-
-        .tech-info p {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tech-info p i {
-            font-size: 0.7rem;
-        }
-
-        .tech-rating {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            color: #ffd700;
-        }
-
-        .tech-rating i {
-            font-size: 0.8rem;
-        }
-
-        .tech-status {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #2ecc71;
-        }
-
-        .view-details-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .view-details-btn:hover {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        /* Main Content Styles */
-        .tech-main {
-            background: var(--bg-card);
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            padding: 25px;
-        }
-
-        .tech-main-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .tech-main-header h2 {
-            color: var(--text-primary);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .tech-main-header h2 i {
-            color: var(--accent-primary);
-        }
-
-        .company-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .company-stat-card {
-            background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-        }
-
-        .company-stat-card .value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            margin-bottom: 5px;
-        }
-
-        .company-stat-card .label {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .company-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .company-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 2fr;
-            align-items: center;
-            padding: 15px;
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .company-item:hover {
-            transform: translateX(5px);
-            border-color: var(--accent-primary);
-        }
-
-        .company-name {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .person-in-charge {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: var(--text-secondary);
-        }
-
-        .person-in-charge .stars {
-            color: #ffd700;
-            margin-left: 5px;
-        }
-
-        .contact-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .contact-status .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #2ecc71;
-        }
-
-        .contact-status .status-dot.offline {
-            background: #95a5a6;
-        }
-
-        .contact-status span {
-            color: var(--text-secondary);
-        }
-
-        .objectives {
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .objectives i {
-            color: var(--warning);
-            font-size: 0.8rem;
-        }
-
-        .add-company-btn {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--bg-secondary);
-            border: 2px dashed var(--border-color);
-            border-radius: 16px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .add-company-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 1200px) {
-            .technical-dashboard {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .company-item {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-        }
-    </style>
 </head>
 <body class="technical-page">
     <div class="container">
@@ -399,7 +46,7 @@ require_once '../database.php';
             </div>
         </div>
 
-        <!-- Performance Overview Cards (Keep these) -->
+        <!-- Performance Overview Cards -->
         <div class="technical-stats-grid">
             <?php
             // Get total staff
@@ -478,9 +125,6 @@ require_once '../database.php';
                     $firstTech = null;
                     while($tech = $techStmt->fetch()) {
                         if (!$firstTech) $firstTech = $tech;
-                        
-                        // Calculate rating stars based on performance
-                        $rating = floor(($tech['performance_rate'] ?? 0) / 20); // 0-5 stars
                         ?>
                         <div class="tech-item" onclick="selectTech(<?php echo $tech['technical_id']; ?>, this)" data-tech-id="<?php echo $tech['technical_id']; ?>">
                             <div class="tech-item-left">
@@ -490,12 +134,7 @@ require_once '../database.php';
                                 <div class="tech-info">
                                     <h4><?php echo htmlspecialchars($tech['firstname'] . ' ' . $tech['lastname']); ?></h4>
                                     <p>
-                                        <span><i class="fas fa-ticket-alt"></i> <?php echo $tech['ticket_count']; ?> tickets</span>
-                                        <span class="tech-rating">
-                                            <?php for($i = 0; $i < 5; $i++): ?>
-                                                <i class="fas fa-star<?php echo $i < $rating ? '' : '-o'; ?>" style="color: <?php echo $i < $rating ? '#ffd700' : 'var(--text-muted)'; ?>"></i>
-                                            <?php endfor; ?>
-                                        </span>
+                                        <i class="fas fa-ticket-alt"></i> <?php echo $tech['ticket_count']; ?> tickets
                                     </p>
                                 </div>
                             </div>
@@ -568,21 +207,13 @@ require_once '../database.php';
                 <!-- Company List -->
                 <div class="company-list" id="companyList">
                     <?php if (count($tickets) > 0): ?>
-                        <?php foreach ($tickets as $ticket): 
-                            // Calculate rating based on priority/status
-                            $rating = $ticket['priority'] == 'High' ? 4 : ($ticket['priority'] == 'Medium' ? 3 : 2);
-                        ?>
+                        <?php foreach ($tickets as $ticket): ?>
                         <div class="company-item">
                             <div class="company-name">
                                 <?php echo htmlspecialchars($ticket['company_name']); ?>
                             </div>
                             <div class="person-in-charge">
                                 <?php echo htmlspecialchars($ticket['contact_person']); ?>
-                                <span class="stars">
-                                    <?php for($i = 0; $i < 5; $i++): ?>
-                                        <i class="fas fa-star<?php echo $i < $rating ? '' : '-o'; ?>" style="color: <?php echo $i < $rating ? '#ffd700' : 'var(--text-muted)'; ?>; font-size: 0.7rem;"></i>
-                                    <?php endfor; ?>
-                                </span>
                             </div>
                             <div class="contact-status">
                                 <span class="status-dot <?php echo $ticket['status'] == 'Resolved' ? 'offline' : ''; ?>"></span>
@@ -858,6 +489,7 @@ require_once '../database.php';
         <div class="spinner"></div>
     </div>
 
+    <script src="../script.js"></script>
     <script>
     let currentTechId = <?php echo $firstTech['technical_id'] ?? 0; ?>;
 
@@ -869,35 +501,34 @@ require_once '../database.php';
         }
     });
 
-   function selectTech(techId, element) {
-    // Remove active class from all tech items
-    document.querySelectorAll('.tech-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Add active class to selected item
-    element.classList.add('active');
-    
-    // Update current tech ID
-    currentTechId = techId;
-    
-    // Show loading
-    showLoading();
-    
-    // Fetch technician's data and update main content
-    // CHANGE THIS LINE - remove the extra 's'
-    fetch(`../get-tech-assignment.php?tech_id=${techId}`)
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            updateMainContent(data);
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Error:', error);
-            showNotification('Error loading technician data', 'danger');
+    function selectTech(techId, element) {
+        // Remove active class from all tech items
+        document.querySelectorAll('.tech-item').forEach(item => {
+            item.classList.remove('active');
         });
-}
+        
+        // Add active class to selected item
+        element.classList.add('active');
+        
+        // Update current tech ID
+        currentTechId = techId;
+        
+        // Show loading
+        showLoading();
+        
+        // Fetch technician's data and update main content
+        fetch(`../get-tech-assignment.php?tech_id=${techId}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                updateMainContent(data);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error loading technician data', 'danger');
+            });
+    }
 
     function updateMainContent(data) {
         const mainContent = document.getElementById('techMainContent');
@@ -933,7 +564,6 @@ require_once '../database.php';
         
         if (data.tickets.length > 0) {
             data.tickets.forEach(ticket => {
-                const rating = ticket.priority == 'High' ? 4 : (ticket.priority == 'Medium' ? 3 : 2);
                 html += `
                     <div class="company-item">
                         <div class="company-name">
@@ -941,9 +571,6 @@ require_once '../database.php';
                         </div>
                         <div class="person-in-charge">
                             ${escapeHtml(ticket.contact_person)}
-                            <span class="stars">
-                                ${generateStars(rating)}
-                            </span>
                         </div>
                         <div class="contact-status">
                             <span class="status-dot ${ticket.status == 'Resolved' ? 'offline' : ''}"></span>
@@ -982,14 +609,6 @@ require_once '../database.php';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    function generateStars(rating) {
-        let stars = '';
-        for (let i = 0; i < 5; i++) {
-            stars += `<i class="fas fa-star${i < rating ? '' : '-o'}" style="color: ${i < rating ? '#ffd700' : 'var(--text-muted)'}; font-size: 0.7rem;"></i>`;
-        }
-        return stars;
     }
 
     function getObjectiveText(concernType) {
@@ -1031,56 +650,55 @@ require_once '../database.php';
     }
 
     // View technical staff details
-    // View technical staff details
-function viewTech(id) {
-    fetch(`../get-technical.php?id=${id}`)
-        .then(response => response.json())
-        .then(data => {
-            const details = document.getElementById('techDetails');
-            
-            // Get performance from view
-            fetch(`../get-tech-performance.php?id=${id}`)
-                .then(perfResponse => perfResponse.json())
-                .then(perf => {
-                    const performance = perf.performance_rate || 0;
-                    const pending = perf.pending || 0;
-                    
-                    details.innerHTML = `
-                        <div style="display: grid; gap: 15px;">
-                            <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
-                            <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
-                            <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
-                            <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
-                            <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
-                            <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
-                            <p><strong><i class="fas fa-ticket-alt"></i> Total Tickets:</strong> ${perf.total_ticket || 0}</p>
-                            <p><strong><i class="fas fa-check-circle"></i> Resolved:</strong> ${perf.resolve || 0}</p>
-                            <p><strong><i class="fas fa-clock"></i> Pending:</strong> ${pending}</p>
-                            <p><strong><i class="fas fa-chart-line"></i> Performance:</strong> 
-                                <div class='progress-bar' style='width: 100%; margin-top: 5px;'>
-                                    <div class='progress' style='width: ${performance}%;'>${performance}%</div>
-                                </div>
-                            </p>
-                        </div>
-                    `;
-                    
-                    openModal('viewTechModal');
-                })
-                .catch(() => {
-                    details.innerHTML = `
-                        <div style="display: grid; gap: 15px;">
-                            <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
-                            <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
-                            <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
-                            <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
-                            <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
-                            <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
-                        </div>
-                    `;
-                    openModal('viewTechModal');
-                });
-        });
-}
+    function viewTech(id) {
+        fetch(`../get-technical.php?id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                const details = document.getElementById('techDetails');
+                
+                // Get performance from view
+                fetch(`../get-tech-performance.php?id=${id}`)
+                    .then(perfResponse => perfResponse.json())
+                    .then(perf => {
+                        const performance = perf.performance_rate || 0;
+                        const pending = perf.pending || 0;
+                        
+                        details.innerHTML = `
+                            <div style="display: grid; gap: 15px;">
+                                <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
+                                <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
+                                <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
+                                <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
+                                <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
+                                <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
+                                <p><strong><i class="fas fa-ticket-alt"></i> Total Tickets:</strong> ${perf.total_ticket || 0}</p>
+                                <p><strong><i class="fas fa-check-circle"></i> Resolved:</strong> ${perf.resolve || 0}</p>
+                                <p><strong><i class="fas fa-clock"></i> Pending:</strong> ${pending}</p>
+                                <p><strong><i class="fas fa-chart-line"></i> Performance:</strong> 
+                                    <div class='progress-bar' style='width: 100%; margin-top: 5px;'>
+                                        <div class='progress' style='width: ${performance}%;'>${performance}%</div>
+                                    </div>
+                                </p>
+                            </div>
+                        `;
+                        
+                        openModal('viewTechModal');
+                    })
+                    .catch(() => {
+                        details.innerHTML = `
+                            <div style="display: grid; gap: 15px;">
+                                <p><strong><i class="fas fa-id-badge"></i> ID:</strong> #${data.technical_id}</p>
+                                <p><strong><i class="fas fa-user"></i> Name:</strong> ${data.firstname} ${data.lastname}</p>
+                                <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
+                                <p><strong><i class="fas fa-phone"></i> Contact:</strong> ${data.contact_viber}</p>
+                                <p><strong><i class="fas fa-map-marker-alt"></i> Branch:</strong> ${data.branch}</p>
+                                <p><strong><i class="fas fa-briefcase"></i> Position:</strong> ${data.position}</p>
+                            </div>
+                        `;
+                        openModal('viewTechModal');
+                    });
+            });
+    }
 
     // Edit technical staff
     function editTech(id) {
@@ -1219,9 +837,16 @@ function viewTech(id) {
         const data = [['Company', 'Person In-Charge', 'Contact', 'Objectives']];
         
         companies.forEach(company => {
-            const cells = company.querySelectorAll('div');
             const row = [];
-            cells.forEach(cell => row.push(cell.innerText));
+            const name = company.querySelector('.company-name')?.innerText || '';
+            const person = company.querySelector('.person-in-charge')?.innerText || '';
+            const contact = company.querySelector('.contact-status span:last-child')?.innerText || '';
+            const objective = company.querySelector('.objectives')?.innerText.replace('Active', '').trim() || '';
+            
+            row.push(name);
+            row.push(person);
+            row.push(contact);
+            row.push(objective);
             data.push(row);
         });
         

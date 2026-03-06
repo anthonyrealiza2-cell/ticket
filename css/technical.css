@@ -92,6 +92,328 @@
   line-height: 1.2;
 }
 
+/* Dashboard Layout */
+.technical-page .technical-dashboard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 25px;
+  margin-top: 25px;
+}
+
+/* Sidebar Styles */
+.technical-page .tech-sidebar {
+  background: var(--bg-card);
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  height: fit-content;
+}
+
+.technical-page .tech-sidebar-header {
+  background: var(--gradient-1);
+  padding: 20px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.technical-page .tech-sidebar-header::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 70%
+  );
+  animation: rotate 20s linear infinite;
+}
+
+.technical-page .tech-sidebar-header h2 {
+  position: relative;
+  z-index: 1;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.technical-page .tech-sidebar-header p {
+  position: relative;
+  z-index: 1;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.technical-page .tech-sidebar-header p i {
+  margin-right: 5px;
+}
+
+.technical-page .tech-list {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.technical-page .tech-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  margin-bottom: 5px;
+}
+
+.technical-page .tech-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(5px);
+}
+
+.technical-page .tech-item.active {
+  background: var(--bg-hover);
+  border-left: 4px solid var(--accent-primary);
+}
+
+.technical-page .tech-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.technical-page .tech-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: var(--gradient-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.technical-page .tech-info h4 {
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.technical-page .tech-info p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.technical-page .tech-info p i {
+  font-size: 0.7rem;
+}
+
+.technical-page .view-details-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.technical-page .view-details-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+/* Main Content Styles */
+.technical-page .tech-main {
+  background: var(--bg-card);
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  padding: 25px;
+}
+
+.technical-page .tech-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.technical-page .tech-main-header h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.technical-page .tech-main-header h2 i {
+  color: var(--accent-primary);
+}
+
+.technical-page .tech-main-stats .badge {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+/* Company Stats */
+.technical-page .company-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.technical-page .company-stat-card {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.technical-page .company-stat-card .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 5px;
+}
+
+.technical-page .company-stat-card .label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Company List */
+.technical-page .company-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.technical-page .company-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr;
+  align-items: center;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.technical-page .company-item:hover {
+  transform: translateX(5px);
+  border-color: var(--accent-primary);
+}
+
+.technical-page .company-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.technical-page .person-in-charge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+}
+
+.technical-page .contact-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.technical-page .contact-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ecc71;
+}
+
+.technical-page .contact-status .status-dot.offline {
+  background: #95a5a6;
+}
+
+.technical-page .contact-status span {
+  color: var(--text-secondary);
+}
+
+.technical-page .objectives {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.technical-page .objectives i {
+  color: var(--warning);
+  font-size: 0.8rem;
+}
+
+.technical-page .add-company-btn {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: 16px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.technical-page .add-company-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Empty State */
+.technical-page .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.technical-page .empty-state i {
+  font-size: 4rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.technical-page .empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.technical-page .empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
 /* Card Styling - Override global card */
 .technical-page .card {
   background: var(--bg-card) !important;
@@ -265,8 +587,13 @@
   color: white !important;
 }
 
-.technical-page .btn-success:hover {
-  background: linear-gradient(145deg, #00a884, #00b8b4) !important;
+.technical-page .btn-excel {
+  background: var(--gradient-2) !important;
+  color: white !important;
+}
+
+.technical-page .btn-excel:hover {
+  box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4) !important;
 }
 
 .technical-page .btn-info {
@@ -284,27 +611,26 @@
   color: white !important;
 }
 
-/* Small button variant - IMPROVED SPACING */
+/* Small button variant */
 .technical-page .btn-sm {
   padding: 8px 12px !important;
   font-size: 0.85rem !important;
   border-radius: 10px !important;
   min-width: 36px !important;
-  margin: 4px 2px !important; /* Added margin for spacing */
+  margin: 4px 2px !important;
 }
 
 .technical-page .btn-sm i {
   font-size: 0.9rem !important;
 }
 
-/* Action buttons group - IMPROVED SPACING */
+/* Action buttons group */
 .technical-page td .btn-sm {
-  margin: 6px 4px !important; /* Increased margin for better spacing */
-  display: inline-flex; /* Ensure proper alignment */
-  vertical-align: middle; /* Align buttons properly */
+  margin: 6px 4px !important;
+  display: inline-flex;
+  vertical-align: middle;
 }
 
-/* Add a container for action buttons to improve spacing */
 .technical-page .action-buttons-container {
   display: flex;
   flex-wrap: wrap;
@@ -316,15 +642,13 @@
 /* Specific styling for the actions cell */
 .technical-page td:last-child {
   white-space: nowrap;
-  padding: 12px 10px !important; /* Adjusted padding for better spacing */
+  padding: 12px 10px !important;
 }
 
-/* Add a subtle separator between buttons if needed */
 .technical-page td .btn-sm:not(:last-child) {
   margin-right: 6px;
 }
 
-/* Ensure buttons don't stick to cell edges */
 .technical-page td .btn-sm:first-child {
   margin-left: 2px;
 }
@@ -433,7 +757,42 @@
   min-width: 120px;
 }
 
+/* Assigned Info in Modal */
+.technical-page .assigned-info {
+  background: var(--bg-secondary);
+  border-left: 4px solid var(--success);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.technical-page .assigned-info i {
+  color: var(--success);
+  font-size: 1.2rem;
+}
+
+.technical-page .assigned-info span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.technical-page .assigned-info strong {
+  color: var(--accent-primary);
+}
+
 /* Animations */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
@@ -447,6 +806,10 @@
 @media (max-width: 1200px) {
   .technical-page .technical-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .technical-page .technical-dashboard {
+    grid-template-columns: 1fr;
   }
 
   .technical-page .card {
@@ -467,6 +830,11 @@
   .technical-page .form-row {
     grid-template-columns: 1fr;
     gap: 15px;
+  }
+
+  .technical-page .company-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
@@ -497,7 +865,10 @@
     font-size: 1.3rem;
   }
 
-  /* Responsive button spacing */
+  .technical-page .company-stats {
+    grid-template-columns: 1fr;
+  }
+
   .technical-page .btn-sm {
     padding: 6px 10px !important;
     margin: 4px 2px !important;
@@ -518,7 +889,6 @@
     font-size: 0.9rem;
   }
 
-  /* Stack buttons vertically on very small screens */
   .technical-page td .btn-sm {
     margin: 4px 2px !important;
     display: inline-block;
@@ -544,6 +914,7 @@
 .technical-page .mt-20 {
   margin-top: 20px;
 }
+
 .technical-page .mb-20 {
   margin-bottom: 20px;
 }
