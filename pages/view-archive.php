@@ -36,6 +36,10 @@ require_once '../database.php';
         <div class="page-header">
             <h1><i class="fas fa-archive"></i> Archived Tickets</h1>
             <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search archived tickets...">
+                </div>
                 <a href="tickets.php" class="btn btn-primary">
                     <i class="fas fa-arrow-left"></i> Back to Tickets
                 </a>
@@ -51,6 +55,9 @@ require_once '../database.php';
                 <table id="archiveTable">
                     <thead>
                         <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)">
+                            </th>
                             <th>ID</th>
                             <th>Company</th>
                             <th>Contact</th>
@@ -79,7 +86,11 @@ require_once '../database.php';
                             $priorityClass = strtolower($ticket['priority'] ?? 'medium');
                             $statusClass = strtolower(str_replace(' ', '', $ticket['status'] ?? 'pending'));
                         ?>
-                            <tr>
+                            <tr data-status="<?= $ticket['status'] ?>" 
+                                data-ticket-id="<?= $ticket['ticket_id'] ?>">
+                                <td>
+                                    <input type="checkbox" class="ticket-checkbox" value="<?= $ticket['ticket_id'] ?>" onchange="updateBulkActions()">
+                                </td>
                                 <td>#<?= $ticket['ticket_id'] ?></td>
                                 <td><?= htmlspecialchars($ticket['company_name']) ?></td>
                                 <td><?= htmlspecialchars($ticket['contact_person']) ?></td>
@@ -118,7 +129,99 @@ require_once '../database.php';
         </div>
     </div>
 
+    <!-- Bulk Restore Confirmation Modal -->
+    <div class="modal" id="bulkRestoreModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Restore Multiple Tickets</h2>
+                <button class="modal-close" onclick="closeModal('bulkRestoreModal')">&times;</button>
+            </div>
+            <div class="delete-warning">
+                <i class="fas fa-trash-restore" style="color: var(--success);"></i>
+                <h3>Are you sure?</h3>
+                <p id="bulkRestoreMessage">You are about to restore <strong id="bulkRestoreCount">0</strong> tickets.</p>
+                <input type="hidden" id="bulkRestoreIds">
+                <div class="delete-actions">
+                    <button class="btn btn-cancel" onclick="closeModal('bulkRestoreModal')">Cancel</button>
+                    <button class="btn btn-success" onclick="bulkRestore()">Restore All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+    // State Management
+    let selectedTickets = new Set();
+
+    // Bulk Operations Functions
+    function updateBulkActions() {
+        const visibleCheckboxes = document.querySelectorAll('.ticket-checkbox:not([style*="display: none"])');
+        const checkedVisible = document.querySelectorAll('.ticket-checkbox:checked:not([style*="display: none"])');
+        
+        selectedTickets.clear();
+        checkedVisible.forEach(cb => selectedTickets.add(cb.value));
+        
+        const count = selectedTickets.size;
+        
+        // Update select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const visibleCheckboxesCount = visibleCheckboxes.length;
+        
+        if (selectAllCheckbox) {
+            if (visibleCheckboxesCount > 0) {
+                selectAllCheckbox.checked = count === visibleCheckboxesCount;
+                selectAllCheckbox.indeterminate = count > 0 && count < visibleCheckboxesCount;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+        }
+        
+        // Show/hide bulk actions if needed
+        const bulkActions = document.getElementById('bulkActions');
+        if (bulkActions) {
+            bulkActions.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+    }
+
+    function toggleSelectAll(checkbox) {
+        const visibleCheckboxes = document.querySelectorAll('.ticket-checkbox:not([style*="display: none"])');
+        
+        visibleCheckboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+        
+        updateBulkActions();
+    }
+
+    function searchTable() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('archiveTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+            
+            for (let j = 1; j < cells.length - 1; j++) {
+                if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            rows[i].style.display = found ? '' : 'none';
+        }
+        
+        // Uncheck all when searching
+        document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        updateBulkActions();
+    }
+
     function restoreTicket(id) {
         if(confirm('Are you sure you want to restore this ticket?')) {
             showLoading();
@@ -201,14 +304,29 @@ require_once '../database.php';
             });
     }
 
+    // Modal Functions
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Loading Functions
     function showLoading() {
-        const spinner = document.createElement('div');
-        spinner.id = 'loadingSpinner';
-        spinner.className = 'modal';
-        spinner.style.background = 'rgba(0,0,0,0.5)';
-        spinner.innerHTML = '<div class="spinner"></div>';
-        spinner.style.display = 'flex';
-        document.body.appendChild(spinner);
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) {
+            spinner.style.display = 'flex';
+        } else {
+            const newSpinner = document.createElement('div');
+            newSpinner.id = 'loadingSpinner';
+            newSpinner.className = 'modal';
+            newSpinner.style.background = 'rgba(0,0,0,0.5)';
+            newSpinner.innerHTML = '<div class="spinner"></div>';
+            newSpinner.style.display = 'flex';
+            document.body.appendChild(newSpinner);
+        }
     }
 
     function hideLoading() {
@@ -233,17 +351,9 @@ require_once '../database.php';
         setTimeout(() => notification.remove(), 3000);
     }
 
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
     // Close modals when clicking outside
     window.onclick = function(event) {
-        const modals = ['viewArchiveModal'];
+        const modals = ['viewArchiveModal', 'bulkRestoreModal'];
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (event.target === modal) {
@@ -251,6 +361,11 @@ require_once '../database.php';
             }
         });
     };
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBulkActions();
+    });
     </script>
 </body>
 </html>

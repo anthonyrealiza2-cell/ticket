@@ -85,7 +85,7 @@ require_once '../database.php';
                             <option value="">Select Product</option>
                             <?php
                             try {
-                                $stmt = $pdo->query("SELECT * FROM products");
+                                $stmt = $pdo->query("SELECT * FROM products ORDER BY product_name");
                                 while($product = $stmt->fetch()) {
                                     echo "<option value='{$product['product_name']} v{$product['version']}'>
                                             {$product['product_name']} v{$product['version']}
@@ -98,32 +98,56 @@ require_once '../database.php';
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-exclamation-triangle"></i> Concern Type
-                        </label>
-                        <select class="form-control" id="concern" required>
-                            <option value="">Select Concern</option>
-                            <?php
-                            try {
-                                $stmt = $pdo->query("SELECT * FROM concerns");
-                                while($concern = $stmt->fetch()) {
-                                    echo "<option value='{$concern['concern_name']}'>{$concern['concern_name']}</option>";
-                                }
-                            } catch(Exception $e) {
-                                echo "<option value=''>No concerns available</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
+                   <div class="form-group">
+    <label class="form-label">
+        <i class="fas fa-exclamation-triangle"></i> Concern Type
+    </label>
+    <select class="form-control" id="concern" required onchange="toggleDescriptionRequirement()">
+        <option value="">Select Concern</option>
+        <?php
+        try {
+            // This query puts 'Others' at the bottom by using a CASE statement in ORDER BY
+            $stmt = $pdo->query("
+                SELECT * FROM concerns 
+                ORDER BY 
+                    CASE 
+                        WHEN concern_name = 'Others' THEN 1 
+                        ELSE 0 
+                    END, 
+                    concern_name ASC
+            ");
+            
+            while($concern = $stmt->fetch()) {
+                echo "<option value='{$concern['concern_name']}' data-id='{$concern['concern_id']}'>
+                        {$concern['concern_name']}
+                      </option>";
+            }
+        } catch(Exception $e) {
+            echo "<option value=''>No concerns available</option>";
+        }
+        ?>
+    </select>
+    <small class="field-hint" id="concernHint">
+        <i class="fas fa-info-circle"></i>
+        Select "Others" if your concern is not listed
+    </small>
+</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" id="descriptionLabel">
                         <i class="fas fa-align-left"></i> Detailed Description
+                        <span id="requiredIndicator" style="color: var(--danger); margin-left: 4px; display: none;">*</span>
                     </label>
                     <textarea class="form-control" id="description" 
-                              placeholder="Please describe the issue in detail..." required></textarea>
+                              placeholder="Please describe the issue in detail..." 
+                              <?php 
+                              // Initially not required, will be toggled by JavaScript
+                              ?>></textarea>
+                    <small class="field-hint" id="descriptionHint">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="hintText">Description is optional for standard concerns</span>
+                    </small>
                 </div>
 
                 <div class="form-row">
@@ -142,8 +166,8 @@ require_once '../database.php';
                         <label class="form-label">
                             <i class="fas fa-calendar"></i> Date Requested
                         </label>
-                        <input type="datetime-local" class="form-control" id="dateRequested" 
-                               value="<?php echo date('Y-m-d\TH:i'); ?>" required>
+                        <input type="date" class="form-control" id="dateRequested" 
+                               value="<?php echo date('Y-m-d'); ?>" required>
                     </div>
                 </div>
 
@@ -192,8 +216,51 @@ require_once '../database.php';
         }, 3000);
     }
 
+    // Toggle description requirement based on concern selection
+    function toggleDescriptionRequirement() {
+        const concernSelect = document.getElementById('concern');
+        const description = document.getElementById('description');
+        const requiredIndicator = document.getElementById('requiredIndicator');
+        const hintText = document.getElementById('hintText');
+        
+        // Check if "Others" is selected
+        const isOthers = concernSelect.value === 'Others';
+        
+        if (isOthers) {
+            description.required = true;
+            requiredIndicator.style.display = 'inline';
+            hintText.textContent = 'Description is required for "Others"';
+            description.placeholder = 'Please describe your concern in detail (required)';
+        } else {
+            description.required = false;
+            requiredIndicator.style.display = 'none';
+            hintText.textContent = 'Description is optional for standard concerns';
+            description.placeholder = 'Please describe the issue in detail... (optional)';
+        }
+        
+        // Update visual state
+        if (description.value.trim()) {
+            description.style.borderColor = '#00b894';
+        } else {
+            description.style.borderColor = isOthers ? '#ff7675' : 'var(--border-color)';
+        }
+    }
+
     function submitTicket(event) {
         event.preventDefault();
+        
+        // Get form elements
+        const concernSelect = document.getElementById('concern');
+        const description = document.getElementById('description');
+        
+        // Validate description if "Others" is selected
+        if (concernSelect.value === 'Others' && !description.value.trim()) {
+            showNotification('Please provide a description for "Others" concern', 'danger');
+            description.style.borderColor = '#ff7675';
+            description.focus();
+            return;
+        }
+        
         showLoading();
         
         const formData = {
@@ -202,8 +269,8 @@ require_once '../database.php';
             contact_number: document.getElementById('contactNumber').value,
             email: document.getElementById('email').value,
             product: document.getElementById('product').value,
-            concern: document.getElementById('concern').value,
-            description: document.getElementById('description').value,
+            concern: concernSelect.value,
+            description: description.value || null, // Send null if empty
             priority: document.getElementById('priority').value,
             date_requested: document.getElementById('dateRequested').value
         };
@@ -237,12 +304,30 @@ require_once '../database.php';
     // Real-time validation
     document.querySelectorAll('.form-control').forEach(input => {
         input.addEventListener('input', function() {
-            if(this.value.trim()) {
-                this.style.borderColor = '#00b894';
+            if(this.id === 'description') {
+                const concernSelect = document.getElementById('concern');
+                const isOthers = concernSelect.value === 'Others';
+                
+                if(isOthers && !this.value.trim()) {
+                    this.style.borderColor = '#ff7675';
+                } else if(this.value.trim()) {
+                    this.style.borderColor = '#00b894';
+                } else {
+                    this.style.borderColor = 'var(--border-color)';
+                }
             } else {
-                this.style.borderColor = '#ff7675';
+                if(this.value.trim()) {
+                    this.style.borderColor = '#00b894';
+                } else {
+                    this.style.borderColor = 'var(--border-color)';
+                }
             }
         });
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleDescriptionRequirement();
     });
     </script>
 </body>

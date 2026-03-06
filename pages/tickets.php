@@ -59,36 +59,35 @@ if (isset($_GET['client_id'])) {
                 </div>
                 
                 <!-- Bulk Actions Dropdown -->
-                <!-- Bulk Actions Dropdown -->
-<div class="bulk-actions-container" id="bulkActions" style="display: none;">
-    <button class="btn btn-primary" onclick="toggleBulkMenu()">
-        <i class="fas fa-check-double"></i> Action Menu <i class="fas fa-caret-down"></i>
-    </button>
-    <div class="bulk-dropdown" id="bulkDropdown">
-        <div class="bulk-dropdown-header">
-            <span><i class="fas fa-layer-group"></i> Selected: <span id="selectedCount">0</span> tickets</span>
-            <button class="btn-sm btn-info" onclick="selectAll()">Select All</button>
-            <button class="btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
-        </div>
-        <div class="bulk-dropdown-item" onclick="openBulkAssignModal()">
-            <i class="fas fa-user-plus" style="color: var(--success);"></i>
-            <span>Assign to Technician</span>
-        </div>
-        <div class="bulk-dropdown-item" onclick="openBulkStatusModal()">
-            <i class="fas fa-sync-alt" style="color: var(--warning);"></i>
-            <span>Update Status</span>
-        </div>
-        <div class="bulk-dropdown-item" onclick="openBulkPriorityModal()">
-            <i class="fas fa-flag" style="color: var(--info);"></i>
-            <span>Update Priority</span>
-        </div>
-        <div class="bulk-dropdown-divider"></div>
-        <div class="bulk-dropdown-item delete" onclick="openBulkArchiveModal()">
-            <i class="fas fa-archive" style="color: var(--warning);"></i>
-            <span>Archive Selected</span>
-        </div>
-    </div>
-</div>
+                <div class="bulk-actions-container" id="bulkActions" style="display: none;">
+                    <button class="btn btn-primary" onclick="toggleBulkMenu()">
+                        <i class="fas fa-check-double"></i> Action Menu <i class="fas fa-caret-down"></i>
+                    </button>
+                    <div class="bulk-dropdown" id="bulkDropdown">
+                        <div class="bulk-dropdown-header">
+                            <span><i class="fas fa-layer-group"></i> Selected: <span id="selectedCount">0</span> tickets</span>
+                            <button class="btn-sm btn-info" onclick="selectAll()">Select All</button>
+                            <button class="btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
+                        </div>
+                        <div class="bulk-dropdown-item" onclick="openBulkAssignModal()">
+                            <i class="fas fa-user-plus" style="color: var(--success);"></i>
+                            <span>Assign to Technician</span>
+                        </div>
+                        <div class="bulk-dropdown-item" onclick="openBulkStatusModal()">
+                            <i class="fas fa-sync-alt" style="color: var(--warning);"></i>
+                            <span>Update Status</span>
+                        </div>
+                        <div class="bulk-dropdown-item" onclick="openBulkPriorityModal()">
+                            <i class="fas fa-flag" style="color: var(--info);"></i>
+                            <span>Update Priority</span>
+                        </div>
+                        <div class="bulk-dropdown-divider"></div>
+                        <div class="bulk-dropdown-item delete" onclick="openBulkArchiveModal()">
+                            <i class="fas fa-archive" style="color: var(--warning);"></i>
+                            <span>Archive Selected</span>
+                        </div>
+                    </div>
+                </div>
 
                 <a href="view-archive.php" class="btn btn-info">
                     <i class="fas fa-archive"></i> View Archive
@@ -469,53 +468,52 @@ if (isset($_GET['client_id'])) {
     </div>
 
     <!-- Bulk Archive Confirmation Modal -->
-    <!-- Bulk Archive Confirmation Modal -->
-<div class="modal" id="bulkArchiveModal">
-    <div class="modal-content" style="max-width: 400px;">
-        <div class="modal-header">
-            <h2>Archive Multiple Tickets</h2>
-            <button class="modal-close" onclick="closeModal('bulkArchiveModal')">&times;</button>
-        </div>
-        <div class="delete-warning">
-            <i class="fas fa-archive" style="color: var(--warning);"></i>
-            <h3>Are you sure?</h3>
-            <p id="bulkArchiveMessage">You are about to archive <strong id="bulkArchiveCount">0</strong> tickets. They can be restored from the archive.</p>
-            <div class="form-group" style="margin-top: 15px;">
-                <label class="form-label">Archive Reason (Optional)</label>
-                <textarea class="form-control" id="bulkArchiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+    <div class="modal" id="bulkArchiveModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Archive Multiple Tickets</h2>
+                <button class="modal-close" onclick="closeModal('bulkArchiveModal')">&times;</button>
             </div>
-            <input type="hidden" id="bulkArchiveIds">
-            <div class="delete-actions">
-                <button class="btn btn-cancel" onclick="closeModal('bulkArchiveModal')">Cancel</button>
-                <button class="btn btn-warning" onclick="bulkArchive()">Archive All</button>
+            <div class="delete-warning">
+                <i class="fas fa-archive" style="color: var(--warning);"></i>
+                <h3>Are you sure?</h3>
+                <p id="bulkArchiveMessage">You are about to archive <strong id="bulkArchiveCount">0</strong> tickets. They can be restored from the archive.</p>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label">Archive Reason (Optional)</label>
+                    <textarea class="form-control" id="bulkArchiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+                </div>
+                <input type="hidden" id="bulkArchiveIds">
+                <div class="delete-actions">
+                    <button class="btn btn-cancel" onclick="closeModal('bulkArchiveModal')">Cancel</button>
+                    <button class="btn btn-warning" onclick="bulkArchive()">Archive All</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Single Archive Confirmation Modal -->
-<div class="modal" id="archiveModal">
-    <div class="modal-content" style="max-width: 400px;">
-        <div class="modal-header">
-            <h2>Archive Ticket</h2>
-            <button class="modal-close" onclick="closeModal('archiveModal')">&times;</button>
-        </div>
-        <div class="delete-warning">
-            <i class="fas fa-archive" style="color: var(--warning);"></i>
-            <h3>Are you sure?</h3>
-            <p>This ticket will be moved to archive. It can be restored later.</p>
-            <div class="form-group" style="margin-top: 15px;">
-                <label class="form-label">Archive Reason (Optional)</label>
-                <textarea class="form-control" id="archiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+    <div class="modal" id="archiveModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Archive Ticket</h2>
+                <button class="modal-close" onclick="closeModal('archiveModal')">&times;</button>
             </div>
-            <input type="hidden" id="archiveTicketId">
-            <div class="delete-actions">
-                <button class="btn btn-cancel" onclick="closeModal('archiveModal')">Cancel</button>
-                <button class="btn btn-warning" onclick="archiveTicket()">Archive</button>
+            <div class="delete-warning">
+                <i class="fas fa-archive" style="color: var(--warning);"></i>
+                <h3>Are you sure?</h3>
+                <p>This ticket will be moved to archive. It can be restored later.</p>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label">Archive Reason (Optional)</label>
+                    <textarea class="form-control" id="archiveReason" rows="2" placeholder="Enter reason for archiving..."></textarea>
+                </div>
+                <input type="hidden" id="archiveTicketId">
+                <div class="delete-actions">
+                    <button class="btn btn-cancel" onclick="closeModal('archiveModal')">Cancel</button>
+                    <button class="btn btn-warning" onclick="archiveTicket()">Archive</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Reassign Confirmation Modal -->
     <div class="modal" id="reassignModal">
@@ -697,30 +695,49 @@ if (isset($_GET['client_id'])) {
             document.getElementById('bulkDropdown').classList.toggle('show');
         }
 
-        // Bulk Operations Functions
+        // ========== FIXED BULK OPERATIONS FUNCTIONS ==========
         function updateBulkActions() {
-            const checkboxes = document.querySelectorAll('.ticket-checkbox:checked');
+            // Get all visible checkboxes (not hidden by filter or search)
+            const visibleCheckboxes = Array.from(document.querySelectorAll('.ticket-checkbox')).filter(cb => {
+                const row = cb.closest('tr');
+                return row && row.style.display !== 'none';
+            });
+            
+            const checkedVisible = visibleCheckboxes.filter(cb => cb.checked);
+            
+            // Clear and rebuild selectedTickets set with only visible checked tickets
             selectedTickets.clear();
-            checkboxes.forEach(cb => selectedTickets.add(cb.value));
+            checkedVisible.forEach(cb => selectedTickets.add(cb.value));
             
             const count = selectedTickets.size;
             document.getElementById('selectedCount').textContent = count;
             document.getElementById('bulkActions').style.display = count > 0 ? 'inline-block' : 'none';
             
-            // Update select all checkbox
-            const allCheckboxes = document.querySelectorAll('.ticket-checkbox');
+            // Update select all checkbox based on visible rows only
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            
             if (selectAllCheckbox) {
-                selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
-                selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+                if (visibleCheckboxes.length > 0) {
+                    selectAllCheckbox.checked = count === visibleCheckboxes.length;
+                    selectAllCheckbox.indeterminate = count > 0 && count < visibleCheckboxes.length;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
             }
         }
 
         function toggleSelectAll(checkbox) {
-            const checkboxes = document.querySelectorAll('.ticket-checkbox');
-            checkboxes.forEach(cb => {
+            // Only select visible checkboxes
+            const visibleCheckboxes = Array.from(document.querySelectorAll('.ticket-checkbox')).filter(cb => {
+                const row = cb.closest('tr');
+                return row && row.style.display !== 'none';
+            });
+            
+            visibleCheckboxes.forEach(cb => {
                 cb.checked = checkbox.checked;
             });
+            
             updateBulkActions();
         }
 
@@ -736,10 +753,79 @@ if (isset($_GET['client_id'])) {
         }
 
         function getSelectedIds() {
-            return Array.from(selectedTickets);
+            // Return only visible selected ticket IDs
+            const visibleChecked = Array.from(document.querySelectorAll('.ticket-checkbox:checked')).filter(cb => {
+                const row = cb.closest('tr');
+                return row && row.style.display !== 'none';
+            });
+            
+            return visibleChecked.map(cb => cb.value);
         }
 
-        // Bulk Assign
+        // ========== UPDATED FILTER FUNCTION ==========
+        function filterTickets(status) {
+            const table = document.getElementById('ticketsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Apply filter
+            for (let i = 1; i < rows.length; i++) {
+                if (status === 'all') {
+                    rows[i].style.display = '';
+                } else if (status === 'unassigned') {
+                    const isUnassigned = rows[i].getAttribute('data-is-unassigned') === 'true';
+                    rows[i].style.display = isUnassigned ? '' : 'none';
+                } else {
+                    const ticketStatus = rows[i].getAttribute('data-status');
+                    rows[i].style.display = (ticketStatus && ticketStatus.toLowerCase() === status.toLowerCase()) ? '' : 'none';
+                }
+            }
+            
+            // Uncheck all checkboxes when changing filters
+            document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Update bulk actions after filter
+            updateBulkActions();
+        }
+
+        // ========== UPDATED SEARCH FUNCTION ==========
+        function searchTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('ticketsTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 1; j < cells.length - 1; j++) {
+                    if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                rows[i].style.display = found ? '' : 'none';
+            }
+            
+            // Uncheck all when searching
+            document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Update bulk actions after search
+            updateBulkActions();
+        }
+
+        // ========== UPDATED BULK ACTION FUNCTIONS ==========
         function openBulkAssignModal() {
             const ids = getSelectedIds();
             if (ids.length === 0) {
@@ -749,11 +835,61 @@ if (isset($_GET['client_id'])) {
             document.getElementById('bulkAssignIds').value = ids.join(',');
             document.getElementById('bulkAssignInfo').innerHTML = `
                 <i class="fas fa-info-circle"></i>
-                <span>Assigning <strong>${ids.length}</strong> ticket(s) to technician</span>
+                <span>Assigning <strong>${ids.length}</strong> visible ticket(s) to technician</span>
             `;
             openModal('bulkAssignModal');
         }
 
+        function openBulkStatusModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            document.getElementById('bulkStatusIds').value = ids.join(',');
+            document.getElementById('bulkStatusInfo').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Updating status for <strong>${ids.length}</strong> visible ticket(s)</span>
+            `;
+            openModal('bulkStatusModal');
+        }
+
+        function openBulkPriorityModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            document.getElementById('bulkPriorityIds').value = ids.join(',');
+            document.getElementById('bulkPriorityInfo').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Updating priority for <strong>${ids.length}</strong> visible ticket(s)</span>
+            `;
+            openModal('bulkPriorityModal');
+        }
+
+        function openBulkArchiveModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            
+            // Check if elements exist before setting properties
+            const bulkArchiveIds = document.getElementById('bulkArchiveIds');
+            const bulkArchiveCount = document.getElementById('bulkArchiveCount');
+            const bulkArchiveMessage = document.getElementById('bulkArchiveMessage');
+            
+            if (bulkArchiveIds) bulkArchiveIds.value = ids.join(',');
+            if (bulkArchiveCount) bulkArchiveCount.textContent = ids.length;
+            if (bulkArchiveMessage) {
+                bulkArchiveMessage.innerHTML = `You are about to archive <strong>${ids.length}</strong> visible tickets. They can be restored from the archive.`;
+            }
+            
+            openModal('bulkArchiveModal');
+        }
+
+        // Bulk Assign
         function bulkAssign(event) {
             event.preventDefault();
             
@@ -795,20 +931,6 @@ if (isset($_GET['client_id'])) {
         }
 
         // Bulk Status Update
-        function openBulkStatusModal() {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                showNotification('No tickets selected', 'warning');
-                return;
-            }
-            document.getElementById('bulkStatusIds').value = ids.join(',');
-            document.getElementById('bulkStatusInfo').innerHTML = `
-                <i class="fas fa-info-circle"></i>
-                <span>Updating status for <strong>${ids.length}</strong> ticket(s)</span>
-            `;
-            openModal('bulkStatusModal');
-        }
-
         function bulkStatusUpdate(event) {
             event.preventDefault();
             
@@ -852,20 +974,6 @@ if (isset($_GET['client_id'])) {
         }
 
         // Bulk Priority Update
-        function openBulkPriorityModal() {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                showNotification('No tickets selected', 'warning');
-                return;
-            }
-            document.getElementById('bulkPriorityIds').value = ids.join(',');
-            document.getElementById('bulkPriorityInfo').innerHTML = `
-                <i class="fas fa-info-circle"></i>
-                <span>Updating priority for <strong>${ids.length}</strong> ticket(s)</span>
-            `;
-            openModal('bulkPriorityModal');
-        }
-
         function bulkPriorityUpdate(event) {
             event.preventDefault();
             
@@ -907,200 +1015,133 @@ if (isset($_GET['client_id'])) {
         }
 
         // Bulk Archive
-       // Bulk Archive
-function openBulkArchiveModal() {
-    const ids = getSelectedIds();
-    if (ids.length === 0) {
-        showNotification('No tickets selected', 'warning');
-        return;
-    }
-    
-    // Check if elements exist before setting properties
-    const bulkArchiveIds = document.getElementById('bulkArchiveIds');
-    const bulkArchiveCount = document.getElementById('bulkArchiveCount');
-    const bulkArchiveMessage = document.getElementById('bulkArchiveMessage');
-    
-    if (bulkArchiveIds) bulkArchiveIds.value = ids.join(',');
-    if (bulkArchiveCount) bulkArchiveCount.textContent = ids.length;
-    if (bulkArchiveMessage) {
-        bulkArchiveMessage.innerHTML = `You are about to archive <strong>${ids.length}</strong> tickets. They can be restored from the archive.`;
-    }
-    
-    openModal('bulkArchiveModal');
-}
-
-function bulkArchive() {
-    const bulkArchiveIds = document.getElementById('bulkArchiveIds');
-    const bulkArchiveReason = document.getElementById('bulkArchiveReason');
-    
-    if (!bulkArchiveIds || !bulkArchiveIds.value) {
-        showNotification('No tickets selected', 'warning');
-        return;
-    }
-    
-    const ids = bulkArchiveIds.value.split(',');
-    const reason = bulkArchiveReason ? bulkArchiveReason.value : '';
-    
-    showLoading();
-    
-    fetch('../bulk-archive-tickets.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            ticket_ids: ids,
-            reason: reason,
-            user_id: 1 // Replace with actual user ID from session
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+        function bulkArchive() {
+            const bulkArchiveIds = document.getElementById('bulkArchiveIds');
+            const bulkArchiveReason = document.getElementById('bulkArchiveReason');
+            
+            if (!bulkArchiveIds || !bulkArchiveIds.value) {
+                showNotification('No tickets selected', 'warning');
+                return;
+            }
+            
+            const ids = bulkArchiveIds.value.split(',');
+            const reason = bulkArchiveReason ? bulkArchiveReason.value : '';
+            
+            showLoading();
+            
+            fetch('../bulk-archive-tickets.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticket_ids: ids,
+                    reason: reason,
+                    user_id: 1 // Replace with actual user ID from session
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', text);
+                    throw new Error('Server returned invalid JSON');
+                }
+            })
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification(`Successfully archived ${data.archived} tickets`, 'success');
+                    closeModal('bulkArchiveModal');
+                    clearSelection();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error during bulk archive: ' + error.message, 'danger');
+            });
         }
-        return response.text();
-    })
-    .then(text => {
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('Failed to parse JSON:', text);
-            throw new Error('Server returned invalid JSON');
-        }
-    })
-    .then(data => {
-        hideLoading();
-        if (data.success) {
-            showNotification(`Successfully archived ${data.archived} tickets`, 'success');
-            closeModal('bulkArchiveModal');
-            clearSelection();
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification('Error: ' + data.message, 'danger');
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        console.error('Error:', error);
-        showNotification('Error during bulk archive: ' + error.message, 'danger');
-    });
-}
 
         // Single Ticket Archive
-       // Single Ticket Archive
-function confirmArchive(ticketId) {
-    const archiveTicketId = document.getElementById('archiveTicketId');
-    const archiveModal = document.getElementById('archiveModal');
-    
-    if (archiveTicketId) {
-        archiveTicketId.value = ticketId;
-    }
-    
-    if (archiveModal) {
-        openModal('archiveModal');
-    } else {
-        showNotification('Archive modal not found', 'danger');
-    }
-}
-
-function archiveTicket() {
-    const archiveTicketId = document.getElementById('archiveTicketId');
-    const archiveReason = document.getElementById('archiveReason');
-    
-    if (!archiveTicketId || !archiveTicketId.value) {
-        showNotification('No ticket selected', 'warning');
-        return;
-    }
-    
-    const ticketId = archiveTicketId.value;
-    const reason = archiveReason ? archiveReason.value : '';
-    
-    showLoading();
-    
-    fetch('../archive-ticket.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            ticket_id: ticketId,
-            reason: reason,
-            user_id: 1 // Replace with actual user ID from session
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.text();
-    })
-    .then(text => {
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('Failed to parse JSON:', text);
-            throw new Error('Server returned invalid JSON');
-        }
-    })
-    .then(data => {
-        hideLoading();
-        closeModal('archiveModal');
-        
-        if (data.success) {
-            showNotification('Ticket archived successfully!', 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification('Error: ' + data.message, 'danger');
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        console.error('Error:', error);
-        showNotification('Error archiving ticket: ' + error.message, 'danger');
-    });
-}
-
-        // Table Functions
-        function searchTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById('ticketsTable');
-            const rows = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                let found = false;
-                
-                for (let j = 1; j < cells.length - 1; j++) {
-                    if (cells[j] && cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
-                        found = true;
-                        break;
-                    }
-                }
-                
-                rows[i].style.display = found ? '' : 'none';
+        function confirmArchive(ticketId) {
+            const archiveTicketId = document.getElementById('archiveTicketId');
+            const archiveModal = document.getElementById('archiveModal');
+            
+            if (archiveTicketId) {
+                archiveTicketId.value = ticketId;
+            }
+            
+            if (archiveModal) {
+                openModal('archiveModal');
+            } else {
+                showNotification('Archive modal not found', 'danger');
             }
         }
 
-        function filterTickets(status) {
-            const table = document.getElementById('ticketsTable');
-            const rows = table.getElementsByTagName('tr');
+        function archiveTicket() {
+            const archiveTicketId = document.getElementById('archiveTicketId');
+            const archiveReason = document.getElementById('archiveReason');
             
-            // Update active tab
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
+            if (!archiveTicketId || !archiveTicketId.value) {
+                showNotification('No ticket selected', 'warning');
+                return;
+            }
             
-            for (let i = 1; i < rows.length; i++) {
-                if (status === 'all') {
-                    rows[i].style.display = '';
-                } else if (status === 'unassigned') {
-                    const isUnassigned = rows[i].getAttribute('data-is-unassigned') === 'true';
-                    rows[i].style.display = isUnassigned ? '' : 'none';
+            const ticketId = archiveTicketId.value;
+            const reason = archiveReason ? archiveReason.value : '';
+            
+            showLoading();
+            
+            fetch('../archive-ticket.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    ticket_id: ticketId,
+                    reason: reason,
+                    user_id: 1 // Replace with actual user ID from session
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', text);
+                    throw new Error('Server returned invalid JSON');
+                }
+            })
+            .then(data => {
+                hideLoading();
+                closeModal('archiveModal');
+                
+                if (data.success) {
+                    showNotification('Ticket archived successfully!', 'success');
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    const ticketStatus = rows[i].getAttribute('data-status');
-                    rows[i].style.display = (ticketStatus && ticketStatus.toLowerCase() === status.toLowerCase()) ? '' : 'none';
+                    showNotification('Error: ' + data.message, 'danger');
                 }
-            }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showNotification('Error archiving ticket: ' + error.message, 'danger');
+            });
         }
 
+        // ... (rest of your existing functions remain the same)
         // Edit Ticket Functions
         function editTicket(id) {
             document.querySelectorAll('.actions-dropdown.show').forEach(menu => {
