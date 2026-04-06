@@ -37,7 +37,8 @@ try {
                                    technical_id = ?, 
                                    status = 'In Progress', 
                                    assigned = TRUE,
-                                   assigned_date = NOW() 
+                                   assigned_date = NOW(),
+                                   is_viewed = 0
                                    WHERE ticket_id = ?");
             $stmt->execute([$data['technical_id'], $data['ticket_id']]);
         } 
@@ -48,7 +49,8 @@ try {
                                    technical_id = ?, 
                                    status = 'In Progress', 
                                    assigned = TRUE,
-                                   assigned_date = NOW() 
+                                   assigned_date = NOW(),
+                                   is_viewed = 0
                                    WHERE ticket_id = ?");
             $stmt->execute([$data['technical_id'], $data['ticket_id']]);
         }
@@ -80,9 +82,9 @@ try {
         // Begin transaction
         $pdo->beginTransaction();
         
-        // Update status
+        // Update status — when Resolved, set is_viewed=0 so admin notification badge fires
         if ($data['status'] === 'Resolved' || $data['status'] === 'Closed') {
-            $stmt = $pdo->prepare("UPDATE tickets SET status = ?, solution = ?, finish_date = NOW() WHERE ticket_id = ?");
+            $stmt = $pdo->prepare("UPDATE tickets SET status = ?, solution = ?, finish_date = NOW(), is_viewed = 0 WHERE ticket_id = ?");
         } else {
             $stmt = $pdo->prepare("UPDATE tickets SET status = ?, solution = ?, finish_date = NULL WHERE ticket_id = ?");
         }

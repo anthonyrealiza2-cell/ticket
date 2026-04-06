@@ -54,7 +54,7 @@ try {
             company_id, technical_id, product_id, concern_id,
             concern_description, date_requested, priority, status,
             assigned, assigned_date, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Assigned', 1, NOW(), NOW(), NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'In Progress', 1, NOW(), NOW(), NOW())
     ");
     
     $stmt->execute([

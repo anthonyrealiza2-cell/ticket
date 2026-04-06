@@ -1,4 +1,5 @@
 <?php
+require_once '../auth_check.php';
 require_once '../database.php';
 
 // Get technician ID from URL
@@ -193,20 +194,7 @@ $ticketCount = count($tickets);
 <body class="technical-page">
     <div class="container">
         <!-- Navbar -->
-        <nav class="navbar">
-            <div class="logo">
-                <i class="fas fa-ticket-alt"></i>
-                <h2>TicketFlow</h2>
-            </div>
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="new-ticket.php" class="nav-link"><i class="fas fa-plus-circle"></i> New Ticket</a>
-                <a href="tickets.php" class="nav-link"><i class="fas fa-list"></i> Tickets</a>
-                <a href="clients.php" class="nav-link"><i class="fas fa-users"></i> Clients</a>
-                <a href="technical.php" class="nav-link active"><i class="fas fa-user-cog"></i> Technical</a>
-                <a href="reports.php" class="nav-link"><i class="fas fa-chart-bar"></i> Reports</a>
-            </div>
-        </nav>
+        <?php include '../navbar.php'; ?>
 
         <!-- Back Button -->
         <div class="back-button">

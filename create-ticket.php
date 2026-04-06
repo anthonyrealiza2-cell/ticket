@@ -12,9 +12,9 @@ if (!$data) {
 try {
     $pdo->beginTransaction();
     
-    // Check if client exists
-    $stmt = $pdo->prepare("SELECT client_id FROM clients WHERE company_name = ? AND contact_person = ?");
-    $stmt->execute([$data['company_name'], $data['contact_person']]);
+    // Check if client exists (by company name only, ignoring contact person differences)
+    $stmt = $pdo->prepare("SELECT client_id FROM clients WHERE company_name = ?");
+    $stmt->execute([$data['company_name']]);
     $client = $stmt->fetch();
     
     if ($client) {

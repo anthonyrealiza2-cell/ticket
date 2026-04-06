@@ -1,0 +1,325 @@
+/* =============================================
+   notifications.css — Resolved Ticket Alerts
+   Matches notif.png layout & Antigravity theme
+   ============================================= */
+
+/* ---- Page header ---- */
+.notif-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.notif-page-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    position: relative;
+}
+
+/* Ghost watermark text behind the title (matches notif.png style) */
+.notif-page-title::after {
+    content: 'Notifications';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--accent-primary);
+    opacity: 0.06;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+.notif-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.notif-mark-all-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: rgba(69, 81, 161, 0.1);
+    color: var(--accent-primary);
+    border: 1px solid rgba(69, 81, 161, 0.2);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+.notif-mark-all-btn:hover {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+.notif-count-pill {
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+/* ---- Container ---- */
+.notif-container {
+    background: var(--bg-card);
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+/* ---- Individual notification row (matches notif.png card rows) ---- */
+.notif-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0 20px;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    transition: background 0.2s ease;
+    cursor: default;
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+/* Unread state — subtle left glow + tinted bg */
+.notif-item.unread {
+    background: rgba(69, 81, 161, 0.04);
+    border-left: 4px solid var(--accent-primary);
+    padding-left: 24px;
+}
+
+.notif-item:hover {
+    background: var(--bg-hover);
+}
+
+/* Dismiss (×) button — top-left, floating */
+.notif-dismiss {
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+    z-index: 2;
+}
+.notif-item:hover .notif-dismiss {
+    opacity: 1;
+}
+.notif-dismiss:hover {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+}
+
+/* ---- Left body ---- */
+.notif-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Tag pill (matches "Joined New User", "Message", etc. in notif.png) */
+.notif-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 2px;
+}
+
+.notif-tag.tag-resolved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.notif-tag.tag-high {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.notif-tag.tag-medium {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.notif-tag.tag-low {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Title — bold, matches notif.png */
+.notif-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+/* Description preview — muted, 2-line clamp */
+.notif-description {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Solution snippet */
+.notif-solution {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    background: rgba(69, 81, 161, 0.06);
+    border-left: 3px solid var(--accent-primary);
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 2px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Technician name link (accent color, matches notif.png "Allen Deu") */
+.notif-tech-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ---- Right side: date ---- */
+.notif-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.notif-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.notif-date i {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.notif-ticket-id {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+/* ---- Empty state ---- */
+.notif-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 16px;
+    color: var(--text-muted);
+}
+.notif-empty i {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+.notif-empty p {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* ---- Pagination / load-more ---- */
+.notif-load-more {
+    display: flex;
+    justify-content: center;
+    padding: 18px;
+    border-top: 1px solid var(--border-color);
+}
+.notif-load-more button {
+    padding: 8px 24px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.notif-load-more button:hover {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+}
+
+/* ---- Navbar bell icon badge (notification dot) ---- */
+.notif-nav-badge {
+    position: absolute;
+    top: -6px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid var(--bg-card);
+    animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%       { transform: scale(1.3); opacity: 0.7; }
+}

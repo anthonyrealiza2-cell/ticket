@@ -30,7 +30,7 @@ if ($type === 'tickets') {
         $sheet->setTitle('Ticket Import');
         
         // Define headers - ADDED CONTACT NUMBER
-        $headers = ['ID', 'Company', 'Contact', 'Contact Number', 'Concern', 'Priority', 'Status', 'Assigned To', 'Date'];
+        $headers = ['ID', 'Company', 'Contact Person', 'Contact Number', 'Concern', 'Priority', 'Status', 'Assigned To', 'Date'];
         $columnLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
         
         // Style for headers

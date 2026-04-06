@@ -28,8 +28,19 @@ try {
     
     // Insert into archive table
     $archiveStmt = $pdo->prepare("
-        INSERT INTO tickets_archive 
-        SELECT t.*, NOW() as archived_at, ? as archived_by, ? as archive_reason
+        INSERT INTO tickets_archive (
+            ticket_id, company_id, technical_personnel, technical_id, 
+            assigned_date, product_id, concern_id, concern_description, 
+            date_requested, submitted_date, finish_date, solution, 
+            remarks, priority, status, assigned, 
+            created_at, updated_at, archived_at, archived_by, archive_reason
+        )
+        SELECT 
+            t.ticket_id, t.company_id, t.technical_personnel, t.technical_id, 
+            t.assigned_date, t.product_id, t.concern_id, t.concern_description, 
+            t.date_requested, t.submitted_date, t.finish_date, t.solution, 
+            t.remarks, t.priority, t.status, t.assigned, 
+            t.created_at, t.updated_at, NOW() as archived_at, ? as archived_by, ? as archive_reason
         FROM tickets t 
         WHERE t.ticket_id = ?
     ");

@@ -1,0 +1,345 @@
+/* auth.css - Styles for Auth Pages (synced with global design system) */
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bg-primary);   /* was --bg-dashboard (undefined) */
+    margin: 0;
+    padding: 20px;
+}
+
+/* ── Auth Card ───────────────────────────────────────────────────────────── */
+.auth-card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.35s ease;
+}
+
+/* Signup-specific wider card */
+.signup-card {
+    max-width: 500px;
+}
+
+/* ── Auth Header ─────────────────────────────────────────────────────────── */
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header img {
+    width: 180px;
+    filter: brightness(0) invert(1);
+}
+
+.auth-header h1 {
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ── Form controls (synced with style.css) ───────────────────────────────── */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-label i {
+    color: var(--accent-primary);
+    margin-right: 6px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 18px;                 /* matches global style.css */
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color); /* matches global (was 1px) */
+    border-radius: 14px;                /* matches global (was 12px) */
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+    background: var(--bg-hover);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+select.form-control {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c7293' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+}
+
+/* ── Password toggle wrapper ─────────────────────────────────────────────── */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper .form-control {
+    padding-right: 48px;
+}
+
+.pw-toggle {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0;
+    line-height: 1;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.pw-toggle:hover {
+    color: var(--accent-primary);
+}
+
+/* ── Primary auth button (synced with .btn + .btn-primary) ───────────────── */
+.btn-auth {
+    width: 100%;
+    padding: 14px 28px;
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    border-radius: 14px;               /* matches global .btn (was 12px) */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: var(--shadow-glow);    /* matches .btn-primary */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ripple effect — matches global .btn::before */
+.btn-auth::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-auth:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-auth:hover {
+    transform: translateY(-3px);       /* matches global .btn:hover */
+    box-shadow: var(--shadow-lg);
+}
+
+/* ── Auth footer ─────────────────────────────────────────────────────────── */
+.auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.auth-footer a:hover {
+    color: var(--accent-secondary);
+}
+
+/* ── Alert messages ──────────────────────────────────────────────────────── */
+.alert-error {
+    background: rgba(255, 118, 117, 0.12);
+    color: var(--danger);
+    padding: 15px 18px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+    animation: slideIn 0.3s ease;
+}
+
+.alert-success {
+    background: rgba(0, 184, 148, 0.12);
+    color: var(--success);
+    padding: 15px 18px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--success);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+    animation: slideIn 0.3s ease;
+}
+
+/* ── Step indicator (verify flow) ────────────────────────────────────────── */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.step.active {
+    color: var(--accent-primary);
+}
+
+.step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-num {
+    background: var(--gradient-1);
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+/* ── Tab switcher (signup page) ──────────────────────────────────────────── */
+.auth-tabs {
+    display: flex;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+    position: relative;
+    user-select: none;
+}
+
+.auth-tab:hover {
+    color: var(--text-primary);
+}
+
+.auth-tab.active {
+    color: var(--accent-primary);
+}
+
+.auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--gradient-1);
+    border-radius: 2px 2px 0 0;
+}
+
+/* ── Tab content ─────────────────────────────────────────────────────────── */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ── Form row ─────────────────────────────────────────────────────────────── */
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* ── Animations (re-declared for auth pages that don't load all of style.css) */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0);     }
+}

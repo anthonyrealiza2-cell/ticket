@@ -129,7 +129,7 @@
     height: 300px;
 }
 
-.clients-page .btn i, 
+.clients-page .btn i,
 .clients-page .btn span {
     position: relative;
     z-index: 1;
@@ -143,7 +143,7 @@
 /* Button variants */
 .clients-page .btn-primary {
     background: var(--gradient-1);
-    color: white;
+    color: var(--text-primary);
     box-shadow: var(--shadow-glow);
 }
 
@@ -153,7 +153,7 @@
 
 .clients-page .btn-danger {
     background: var(--gradient-3);
-    color: white;
+    color: var(--text-primary);
 }
 
 .clients-page .btn-danger:hover {
@@ -162,7 +162,7 @@
 
 .clients-page .btn-info {
     background: var(--info);
-    color: white;
+    color: var(--text-primary);
 }
 
 .clients-page .btn-info:hover {
@@ -368,7 +368,7 @@
     .clients-page .card {
         padding: 20px;
     }
-    
+
     .clients-page .page-header h1 {
         font-size: 1.8rem;
     }
@@ -379,20 +379,20 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .clients-page .page-header .btn {
         width: 100%;
     }
-    
+
     .clients-page .table-container {
         border-radius: 12px;
     }
-    
+
     .clients-page th {
         padding: 15px 12px;
         font-size: 0.85rem;
     }
-    
+
     .clients-page td {
         padding: 12px;
         font-size: 0.9rem;
@@ -403,35 +403,35 @@
     .clients-page .container {
         padding: 15px;
     }
-    
+
     .clients-page .card {
         padding: 15px;
     }
-    
+
     .clients-page .page-header h1 {
         font-size: 1.5rem;
     }
-    
+
     .clients-page .btn-sm {
         padding: 6px 12px;
     }
-    
+
     .clients-page .badge {
         padding: 4px 8px;
         font-size: 0.75rem;
         min-width: 60px;
     }
-    
+
     .clients-page #clientDetails p {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
     }
-    
+
     .clients-page #clientDetails p strong {
         min-width: auto;
     }
-    
+
     .clients-page .alert {
         min-width: 250px;
         left: 50%;
@@ -446,16 +446,16 @@
     .clients-page .card {
         padding: 12px;
     }
-    
+
     .clients-page .page-header h1 {
         font-size: 1.3rem;
     }
-    
+
     .clients-page .btn {
         padding: 10px 16px;
         font-size: 0.9rem;
     }
-    
+
     .clients-page td .btn-sm {
         padding: 5px 10px;
         margin: 2px;
@@ -478,8 +478,13 @@
     justify-content: flex-end;
 }
 
-.clients-page .mt-20 { margin-top: 20px; }
-.clients-page .mb-20 { margin-bottom: 20px; }
+.clients-page .mt-20 {
+    margin-top: 20px;
+}
+
+.clients-page .mb-20 {
+    margin-bottom: 20px;
+}
 
 /* Table row transition */
 .clients-page tr {
@@ -507,7 +512,9 @@
 
 /* Keyframes */
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes slideIn {
@@ -515,6 +522,7 @@
         opacity: 0;
         transform: translateX(30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);

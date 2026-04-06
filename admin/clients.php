@@ -1,5 +1,10 @@
 <?php
+require_once '../auth_check.php';
 require_once '../database.php';
+
+// Enable error logging but not display
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,20 +23,7 @@ require_once '../database.php';
 <body class="clients-page">
     <div class="container">
         <!-- Navbar -->
-        <nav class="navbar">
-            <div class="logo">
-                <i class="fas fa-ticket-alt"></i>
-                <h2>TicketFlow</h2>
-            </div>
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="new-ticket.php" class="nav-link"><i class="fas fa-plus-circle"></i> New Ticket</a>
-                <a href="tickets.php" class="nav-link"><i class="fas fa-list"></i> Tickets</a>
-                <a href="clients.php" class="nav-link active"><i class="fas fa-users"></i> Clients</a>
-                <a href="technical.php" class="nav-link"><i class="fas fa-user-cog"></i> Technical</a>
-                <a href="reports.php" class="nav-link"><i class="fas fa-chart-bar"></i> Reports</a>
-            </div>
-        </nav>
+        <?php include '../navbar.php'; ?>
 
         <!-- Header -->
         <div class="flex justify-between page-header" style="margin-bottom: 20px;">
@@ -40,9 +32,6 @@ require_once '../database.php';
                 <button class="btn btn-success" onclick="exportToExcel()" style="background: var(--gradient-2);">
                     <i class="fas fa-file-excel"></i> Export to Excel
                 </button>
-                <!-- <button class="btn btn-primary" onclick="openAddClientModal()">
-                    <i class="fas fa-plus-circle"></i> Add New Client
-                </button> -->
             </div>
         </div>
 
@@ -66,27 +55,60 @@ require_once '../database.php';
                     </thead>
                     <tbody>
                         <?php
-                        $stmt = $pdo->query("SELECT * FROM vw_client_stats ORDER BY last_ticket_date DESC");
-                        while($client = $stmt->fetch()) {
-                            echo "<tr>";
-                            echo "<td>#{$client['client_id']}</td>";
-                            echo "<td><strong>{$client['company_name']}</strong></td>";
-                            echo "<td>{$client['contact_person']}</td>";
-                            echo "<td>{$client['contact_number']}</td>";
-                            echo "<td>{$client['email']}</td>";
-                            echo "<td><span class='badge badge-info'>{$client['total_tickets']}</span></td>";
-                            echo "<td><span class='badge badge-warning'>{$client['open_tickets']}</span></td>";
-                            echo "<td><span class='badge badge-success'>{$client['resolved_tickets']}</span></td>";
-                            echo "<td>" . ($client['last_ticket_date'] ? date('M d, Y', strtotime($client['last_ticket_date'])) : 'No tickets') . "</td>";
-                            echo "<td>
-                                    <button class='btn btn-primary btn-sm' onclick='viewClientTickets({$client['client_id']})' title='View Tickets'>
-                                        <i class='fas fa-ticket-alt'></i>
-                                    </button>
-                                    <button class='btn btn-info btn-sm' onclick='viewClientDetails({$client['client_id']})' title='View Details'>
-                                        <i class='fas fa-eye'></i>
-                                    </button>
-                                  </td>";
-                            echo "</tr>";
+                        try {
+                            // Use direct query instead of view to avoid permission issues
+                            $stmt = $pdo->query("
+                                SELECT 
+                                    c.client_id,
+                                    c.company_name,
+                                    c.contact_person,
+                                    c.contact_number,
+                                    c.email,
+                                    c.created_at,
+                                    COUNT(t.ticket_id) as total_tickets,
+                                    SUM(CASE WHEN t.status IN ('Pending', 'In Progress', 'Assigned') THEN 1 ELSE 0 END) as open_tickets,
+                                    SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) as resolved_tickets,
+                                    MAX(t.date_requested) as last_ticket_date
+                                FROM clients c
+                                LEFT JOIN tickets t ON c.client_id = t.company_id
+                                GROUP BY c.client_id, c.company_name, c.contact_person, c.contact_number, c.email, c.created_at
+                                ORDER BY last_ticket_date DESC
+                            ");
+                            
+                            while($client = $stmt->fetch()) {
+                                $totalTickets = $client['total_tickets'] ?? 0;
+                                $openTickets = $client['open_tickets'] ?? 0;
+                                $resolvedTickets = $client['resolved_tickets'] ?? 0;
+                                $lastTicketDate = $client['last_ticket_date'] ? date('M d, Y', strtotime($client['last_ticket_date'])) : 'No tickets';
+                                
+                                echo "<tr>";
+                                echo "<td>#{$client['client_id']}</td>";
+                                echo "<td><strong>" . htmlspecialchars($client['company_name']) . "</strong></td>";
+                                echo "<td>" . htmlspecialchars($client['contact_person'] ?? 'N/A') . "</td>";
+                                echo "<td>" . htmlspecialchars($client['contact_number'] ?? 'N/A') . "</td>";
+                                echo "<td>" . htmlspecialchars($client['email'] ?? 'N/A') . "</td>";
+                                echo "<td><span class='badge badge-info'>{$totalTickets}</span></td>";
+                                echo "<td><span class='badge badge-warning'>{$openTickets}</span></td>";
+                                echo "<td><span class='badge badge-success'>{$resolvedTickets}</span></td>";
+                                echo "<td>{$lastTicketDate}</td>";
+                                echo "<td>
+                                        <button class='btn btn-primary btn-sm' onclick='viewClientTickets({$client['client_id']})' title='View Tickets'>
+                                            <i class='fas fa-ticket-alt'></i>
+                                        </button>
+                                        <button class='btn btn-info btn-sm' onclick='viewClientDetails({$client['client_id']})' title='View Details'>
+                                            <i class='fas fa-eye'></i>
+                                        </button>
+                                      </td>";
+                                echo "</tr>";
+                            }
+                        } catch (PDOException $e) {
+                            // Log error but show user-friendly message
+                            error_log("Database error in clients.php: " . $e->getMessage());
+                            echo "<tr><td colspan='10' style='text-align: center; color: var(--danger); padding: 40px;'>
+                                    <i class='fas fa-exclamation-triangle' style='font-size: 2rem; margin-bottom: 10px;'></i>
+                                    <h3>Error loading clients</h3>
+                                    <p>Please try again later or contact support.</p>
+                                  </td></tr>";
                         }
                         ?>
                     </tbody>
@@ -95,8 +117,8 @@ require_once '../database.php';
         </div>
     </div>
 
-    <!-- Add Client Modal -->
-    <div class="modal" id="addClientModal">
+    <!-- Add Client Modal (Hidden by default) -->
+    <div class="modal" id="addClientModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Add New Client</h2>
@@ -177,6 +199,10 @@ require_once '../database.php';
             } else {
                 showNotification('Error: ' + data.message, 'danger');
             }
+        })
+        .catch(error => {
+            hideLoading();
+            showNotification('Error adding client', 'danger');
         });
     }
 
@@ -185,22 +211,55 @@ require_once '../database.php';
     }
 
     function viewClientDetails(clientId) {
-        fetch(`../get-client.php?id=${clientId}`)
-            .then(response => response.json())
+        showLoading();
+        
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        
+        fetch(`../get-client.php?id=${clientId}&_=${timestamp}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                // Check for HTML response (InfinityFree protection)
+                if (text.trim().startsWith('<')) {
+                    throw new Error('Server returned HTML. Please try again.');
+                }
+                return JSON.parse(text);
+            })
             .then(data => {
+                hideLoading();
+                if(data.success === false || data.error) {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
                 const details = document.getElementById('clientDetails');
                 details.innerHTML = `
                     <div style="display: grid; gap: 15px;">
                         <p><strong><i class="fas fa-id-badge"></i> Client ID:</strong> #${data.client_id}</p>
-                        <p><strong><i class="fas fa-building"></i> Company Name:</strong> ${data.company_name}</p>
-                        <p><strong><i class="fas fa-user"></i> Contact Person:</strong> ${data.contact_person}</p>
-                        <p><strong><i class="fas fa-phone"></i> Contact Number:</strong> ${data.contact_number}</p>
-                        <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${data.email}</p>
-                        <p><strong><i class="fas fa-calendar"></i> Joined Date:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
+                        <p><strong><i class="fas fa-building"></i> Company Name:</strong> ${escapeHtml(data.company_name)}</p>
+                        <p><strong><i class="fas fa-user"></i> Contact Person:</strong> ${escapeHtml(data.contact_person)}</p>
+                        <p><strong><i class="fas fa-phone"></i> Contact Number:</strong> ${escapeHtml(data.contact_number)}</p>
+                        <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${escapeHtml(data.email)}</p>
+                        <p><strong><i class="fas fa-calendar"></i> Joined Date:</strong> ${data.created_at ? new Date(data.created_at).toLocaleDateString() : 'N/A'}</p>
                     </div>
                 `;
                 openModal('viewClientModal');
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error fetching client details:', error);
+                showNotification('Error loading client details: ' + error.message, 'danger');
             });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function exportToExcel() {
@@ -264,20 +323,6 @@ require_once '../database.php';
         ];
         ws['!cols'] = colWidths;
         
-        // Apply text format to specific columns to preserve leading zeros
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let R = range.s.r; R <= range.e.r; R++) {
-            for (let C = range.s.c; C <= range.e.c; C++) {
-                const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
-                if (!ws[cell_ref]) continue;
-                
-                // Set cell type to string for ID (col 0) and Contact Number (col 3)
-                if (C === 0 || C === 3) {
-                    ws[cell_ref].t = 's'; // Set cell type to string
-                }
-            }
-        }
-        
         XLSX.utils.book_append_sheet(wb, ws, 'Clients');
         XLSX.writeFile(wb, `clients_export_${new Date().toISOString().slice(0,10)}.xlsx`);
         
@@ -288,7 +333,8 @@ require_once '../database.php';
         const spinner = document.createElement('div');
         spinner.id = 'loadingSpinner';
         spinner.className = 'modal';
-        spinner.style.background = 'transparent';
+        spinner.style.background = 'rgba(0,0,0,0.5)';
+        spinner.style.backdropFilter = 'blur(3px)';
         spinner.innerHTML = '<div class="spinner"></div>';
         spinner.style.display = 'flex';
         document.body.appendChild(spinner);

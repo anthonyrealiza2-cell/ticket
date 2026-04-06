@@ -97,6 +97,9 @@
   background: var(--bg-hover);
 }
 
+:root[data-theme='dark'] .report-filters .form-control[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
 /* Quick Filters Section */
 .quick-filters {
   display: flex;
@@ -109,7 +112,7 @@
 }
 
 .quick-filter-label {
-  color: var(--text-muted);
+  color: #ffffff;
   font-size: 0.9rem;
   display: flex;
   align-items: center;

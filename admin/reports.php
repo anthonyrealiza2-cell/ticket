@@ -1,4 +1,5 @@
 <?php
+require_once '../auth_check.php';
 require_once '../database.php';
 ?>
 <!DOCTYPE html>
@@ -9,6 +10,7 @@ require_once '../database.php';
     <title>Reports - TicketFlow</title>
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/modal.css">
     <link rel="stylesheet" href="../css/report.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,20 +20,7 @@ require_once '../database.php';
 <body>
     <div class="container">
         <!-- Navbar -->
-        <nav class="navbar">
-            <div class="logo">
-                <i class="fas fa-ticket-alt"></i>
-                <h2>TicketFlow</h2>
-            </div>
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="new-ticket.php" class="nav-link"><i class="fas fa-plus-circle"></i> New Ticket</a>
-                <a href="tickets.php" class="nav-link"><i class="fas fa-list"></i> Tickets</a>
-                <a href="clients.php" class="nav-link"><i class="fas fa-users"></i> Clients</a>
-                <a href="technical.php" class="nav-link"><i class="fas fa-user-cog"></i> Technical</a>
-                <a href="reports.php" class="nav-link active"><i class="fas fa-chart-bar"></i> Reports</a>
-            </div>
-        </nav>
+        <?php include '../navbar.php'; ?>
 
         <!-- Header -->
         <div class="flex justify-between" style="margin-bottom: 30px;">
@@ -71,17 +60,17 @@ require_once '../database.php';
         // Pending tickets
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Pending' AND DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
-        $pendingTickets = $stmt->fetch()['count'] ?? 0;
+        $pendingTickets = $stmt->fetch()['total'] ?? 0;
         
         // In Progress tickets
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'In Progress' AND DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
-        $inProgressTickets = $stmt->fetch()['count'] ?? 0;
+        $inProgressTickets = $stmt->fetch()['total'] ?? 0;
         
         // Assigned tickets
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tickets WHERE status = 'Assigned' AND DATE(date_requested) BETWEEN ? AND ?");
         $stmt->execute([$dateFrom, $dateTo]);
-        $assignedTickets = $stmt->fetch()['count'] ?? 0;
+        $assignedTickets = $stmt->fetch()['total'] ?? 0;
         
         // Total completed (Resolved + Closed)
         $completedTickets = $resolvedTickets + $closedTickets;
@@ -322,7 +311,7 @@ require_once '../database.php';
             <!-- Technical Performance -->
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-trophy"></i> Top Technical Staff
+                    <i class="fas fa-trophy"></i>Resolution Performance
                 </div>
                 <div class="chart-container">
                     <canvas id="techChart"></canvas>
@@ -453,19 +442,27 @@ require_once '../database.php';
                 $dailyLabels[] = date('M d', strtotime($date));
             }
             
-            // Get technical performance from view
+            // Get technical performance matching technical.php logic
             $techData = [];
             $techLabels = [];
             $stmt = $pdo->query("
-                SELECT full_name, performance_rate 
-                FROM vw_tech_performance 
-                WHERE total_ticket > 0
-                ORDER BY performance_rate DESC
+                SELECT 
+                    CONCAT(ts.firstname, ' ', ts.lastname) as full_name,
+                    COUNT(t.ticket_id) as total_ticket,
+                    SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) as resolve
+                FROM technical_staff ts
+                LEFT JOIN tickets t ON ts.technical_id = t.technical_id
+                WHERE ts.is_active = 1
+                GROUP BY ts.technical_id
+                HAVING total_ticket > 0
+                ORDER BY resolve DESC
                 LIMIT 5
             ");
             while($row = $stmt->fetch()) {
                 $techLabels[] = $row['full_name'];
-                $techData[] = $row['performance_rate'];
+                // Calculate percentage based on resolve / total_ticket
+                $percentage = $row['total_ticket'] > 0 ? round(($row['resolve'] / $row['total_ticket']) * 100) : 0;
+                $techData[] = $percentage;
             }
             ?>
 
@@ -644,6 +641,13 @@ require_once '../database.php';
 
     // Chart initialization
     document.addEventListener('DOMContentLoaded', function() {
+        // Theme-aware text color for all charts
+        const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+        const getChartTextColor = () => isDark() ? '#e0e0e0' : '#1e2a3a';
+        const getGridColor = () => isDark() ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+        const chartTextColor = getChartTextColor();
+        const gridColor = getGridColor();
+
         // Status Chart Data
         <?php
         $statuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Closed'];
@@ -670,8 +674,16 @@ require_once '../database.php';
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#fff',
-                            font: { size: 12 }
+                            color: chartTextColor,
+                            font: { size: 12, weight: '500' },
+                            usePointStyle: true,
+                            padding: 20
+                        },
+                        onHover: function(event, legendElement) {
+                            event.native.target.style.cursor = 'pointer';
+                        },
+                        onLeave: function(event, legendElement) {
+                            event.native.target.style.cursor = 'default';
                         }
                     },
                     tooltip: {
@@ -712,9 +724,9 @@ require_once '../database.php';
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#2f3542' },
+                        grid: { color: gridColor },
                         ticks: { 
-                            color: '#fff',
+                            color: chartTextColor,
                             stepSize: 1,
                             callback: function(value) {
                                 if (Math.floor(value) === value) {
@@ -725,7 +737,7 @@ require_once '../database.php';
                     },
                     x: { 
                         grid: { display: false },
-                        ticks: { color: '#fff' }
+                        ticks: { color: chartTextColor }
                     }
                 },
                 plugins: {
@@ -757,7 +769,7 @@ require_once '../database.php';
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#6c5ce7',
-                    pointBorderColor: '#fff',
+                    pointBorderColor: chartTextColor,
                     pointRadius: 5,
                     pointHoverRadius: 8
                 }]
@@ -768,9 +780,9 @@ require_once '../database.php';
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#2f3542' },
+                        grid: { color: gridColor },
                         ticks: { 
-                            color: '#fff',
+                            color: chartTextColor,
                             stepSize: 1,
                             callback: function(value) {
                                 if (Math.floor(value) === value) {
@@ -781,12 +793,12 @@ require_once '../database.php';
                     },
                     x: { 
                         grid: { display: false },
-                        ticks: { color: '#fff' }
+                        ticks: { color: chartTextColor }
                     }
                 },
                 plugins: {
                     legend: { 
-                        labels: { color: '#fff' }
+                        labels: { color: chartTextColor }
                     }
                 }
             }
@@ -813,9 +825,9 @@ require_once '../database.php';
                     x: {
                         beginAtZero: true,
                         max: 100,
-                        grid: { color: '#2f3542' },
+                        grid: { color: gridColor },
                         ticks: { 
-                            color: '#fff',
+                            color: chartTextColor,
                             callback: function(value) {
                                 return value + '%';
                             }
@@ -823,7 +835,7 @@ require_once '../database.php';
                     },
                     y: { 
                         grid: { display: false },
-                        ticks: { color: '#fff' }
+                        ticks: { color: chartTextColor }
                     }
                 },
                 plugins: {

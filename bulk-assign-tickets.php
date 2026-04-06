@@ -23,8 +23,10 @@ try {
         SET technical_id = ?, 
             assigned = 1,
             assigned_date = NOW(),
+            is_viewed = 0,
             status = CASE 
-                WHEN status = 'Pending' THEN 'Assigned'
+                WHEN status = 'Pending' THEN 'In Progress'
+                WHEN status = 'Assigned' THEN 'In Progress'
                 ELSE status
             END
         WHERE ticket_id = ?
